@@ -12,7 +12,7 @@ dependencies:
     - go get -t -d -v ./...
     - gox -output="srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
     - github-release release --draft -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build
-    - for file in "srcds_exporter_*"; do github-release upload -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build -n "${file}" -f "${file}"; done
+    - for file in ./srcds_exporter_*; do github-release upload -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build -n "${file}" -f "${file}"; done
 
 test:
   override:
