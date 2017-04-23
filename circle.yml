@@ -1,0 +1,16 @@
+dependencies:
+  override:
+	- mkdir -p ~/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}
+	- ln -s ${HOME}/${CIRCLE_PROJECT_REPONAME} ${HOME}/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+    # './...' is a relative pattern which means all subdirectories
+    - go get github.com/mitchellh/gox
+    - go get github.com/aktau/github-release
+    - go get -t -d -v ./...
+    - go build -v
+    - env
+    - github-release release --user ${CIRCLE_PROJECT_USERNAME} --repo ${CIRCLE_PROJECT_REPONAME} --tag ${CIRCLE_PROJECT_} --draft
+
+test:
+  override:
+    # './...' is a relative pattern which means all subdirectories
+    - go test -v -race ./...
