@@ -1,3 +1,7 @@
+machine:
+  environment:
+    PATH: "/usr/local/go/bin:/usr/local/go_workspace/bin:~/.go_workspace/bin:${PATH}"
+
 dependencies:
   override:
     - mkdir -p ~/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}
@@ -6,7 +10,7 @@ dependencies:
     - go get github.com/mitchellh/gox
     - go get github.com/aktau/github-release
     - go get -t -d -v ./...
-    - gox -output="srcds_exporter{{.OS}}_{{.Arch}}" -v ./...
+    - gox -output="srcds_exporter{{.OS}}_{{.Arch}}" -verbose ./...
     - env
     - github-release release --user ${CIRCLE_PROJECT_USERNAME} --repo ${CIRCLE_PROJECT_REPONAME} --tag ${CIRCLE_PROJECT_BRANCH} --draft
 
