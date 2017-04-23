@@ -11,7 +11,8 @@ dependencies:
     - go get github.com/aktau/github-release
     - go get -t -d -v ./...
     - gox -output="srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
-    - find . -name "srcds_exporter_*" -exec sh -c 'github-release upload -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t "${CIRCLE_BRANCH}" --draft -n "${1/.\/}" -f "$1"' _ {} \;
+    - github-release release --draft -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build
+    - find . -name "srcds_exporter_*" -exec sh -c 'github-release upload -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t "${CIRCLE_BRANCH}" -n "${1/.\/}" -f "$1"' _ {} \;
 
 test:
   override:
