@@ -10,9 +10,8 @@ dependencies:
     - go get github.com/mitchellh/gox
     - go get github.com/aktau/github-release
     - go get -t -d -v ./...
-    - gox -output="srcds_exporter{{.OS}}_{{.Arch}}" -verbose ./...
-    - env
-    - github-release release --user ${CIRCLE_PROJECT_USERNAME} --repo ${CIRCLE_PROJECT_REPONAME} --tag ${CIRCLE_PROJECT_BRANCH} --draft
+    - gox -output="srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
+    - find . -name "srcds_exporter_*" -exec sh -c 'github-release upload --user ${CIRCLE_PROJECT_USERNAME} --repo ${CIRCLE_PROJECT_REPONAME} --tag ${CIRCLE_BRANCH} --draft --name "${1/.\/}" --file "$1"' _ {} \;
 
 test:
   override:
