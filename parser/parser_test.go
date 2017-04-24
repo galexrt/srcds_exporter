@@ -25,7 +25,7 @@ func TestParseHostname(t *testing.T) {
 	for _, tt := range parseHostnameTests {
 		actual := parseHostname(tt.request)
 		if actual != tt.expected {
-			t.Errorf("Parse(%s): expected %s, actual %s", tt.request, tt.expected, actual)
+			t.Errorf("parseHostname(%s): expected %s, actual %s", tt.request, tt.expected, actual)
 		}
 	}
 }
@@ -44,7 +44,7 @@ func TestParseVersion(t *testing.T) {
 	for _, tt := range parseVersionTests {
 		actual := parseVersion(tt.request)
 		if actual != tt.expected {
-			t.Errorf("Parse(%s): expected %s, actual %s", tt.request, tt.expected, actual)
+			t.Errorf("parseVersion(%s): expected %s, actual %s", tt.request, tt.expected, actual)
 		}
 	}
 }
@@ -63,18 +63,18 @@ func TestParseMap(t *testing.T) {
 	for _, tt := range parseMapTests {
 		actual := parseMap(tt.request)
 		if actual != tt.expected {
-			t.Errorf("Parse(%s): expected %s, actual %s", tt.request, tt.expected, actual)
+			t.Errorf("parseMap(%s): expected %s, actual %s", tt.request, tt.expected, actual)
 		}
 	}
 }
 
 var parsePlayerCountTests = []struct {
 	request  string
-	expected models.PlayerCount
+	expected *models.PlayerCount
 }{
 	{
 		`players : 1 (64 max)`,
-		*&models.PlayerCount{
+		&models.PlayerCount{
 			Current: 1,
 			Max:     64,
 		},
@@ -83,9 +83,38 @@ var parsePlayerCountTests = []struct {
 
 func TestParsePlayerCount(t *testing.T) {
 	for _, tt := range parsePlayerCountTests {
-		actual := *parsePlayerCount(tt.request)
+		actual := parsePlayerCount(tt.request)
 		if !reflect.DeepEqual(actual, tt.expected) {
-			t.Errorf("Parse(%s): expected %v, actual %v", tt.request, tt.expected, actual)
+			t.Errorf("parsePlayerCount(%s): expected %v, actual %v", tt.request, tt.expected, actual)
+		}
+	}
+}
+
+var parsePlayersTests = []struct {
+	request  string
+	expected map[int]models.Player
+}{
+	{
+		`#    218 "TestUser1"      STEAM_0:0:1015738 07:36       65    0 active 10.10.220.12:27005`,
+		map[int]models.Player{
+			218: *&models.Player{
+				Username: "TestUser1",
+				SteamID:  "STEAM_0:0:1015738",
+				Ping:     65,
+				Loss:     0,
+				State:    "active",
+				IP:       "10.10.220.12",
+				ConnPort: 27005,
+			},
+		},
+	},
+}
+
+func TestParsePlayers(t *testing.T) {
+	for _, tt := range parsePlayersTests {
+		actual := parsePlayers([]string{tt.request})
+		if !reflect.DeepEqual(actual, tt.expected) {
+			t.Errorf("parsePlayers(%s): expected %v, actual %v", tt.request, tt.expected, actual)
 		}
 	}
 }
