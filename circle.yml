@@ -4,14 +4,14 @@ machine:
 
 dependencies:
   override:
-    - mkdir -p ~/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}
+    - mkdir -p ~/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME} ./output
     - ln -s ${HOME}/${CIRCLE_PROJECT_REPONAME} ${HOME}/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
     - go get github.com/mitchellh/gox
-    - go get github.com/aktau/github-release
+    - go get github.com/tcnksm/ghr
     - go get -t -d -v ./...
-    - gox -output="srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
-    - github-release release --pre-release -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build
-    - for file in ./srcds_exporter_*; do github-release upload -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build -n "${file}" -f "${file}"; done
+    - gox -output="./output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
+    - ghr -draft -delete master-build ./output
+    - for file in ./output/srcds_exporter_*; do github-release upload -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build -n "${file}" -f "${file}"; done
 
 test:
   override:
