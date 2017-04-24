@@ -33,7 +33,7 @@ func parseVersion(line string) string {
 }
 
 func parseMap(line string) string {
-	re := regexp.MustCompile(`(?m)^map[ ]*: ([a-zA-Z_]+).*$`)
+	re := regexp.MustCompile(`(?m)^map[ ]*: ([a-zA-Z_0-9-]+).*$`)
 	return re.FindStringSubmatch(line)[1]
 }
 
@@ -74,7 +74,7 @@ func parsePlayers(lines []string) map[int]models.Player {
 		if err != nil {
 			panic(err)
 		}
-		connPort, err := strconv.Atoi(m[11])
+		connPort, err := strconv.Atoi(m[17])
 		if err != nil {
 			panic(err)
 		}
