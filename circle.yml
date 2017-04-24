@@ -10,8 +10,7 @@ dependencies:
     - go get github.com/tcnksm/ghr
     - go get -t -d -v ./...
     - gox -output="./output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
-    - ghr -draft -delete master-build ./output
-    - for file in ./output/srcds_exporter_*; do github-release upload -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build -n "${file}" -f "${file}"; done
+    - ghr -draft -replace -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} master-build ./output
 
 test:
   override:

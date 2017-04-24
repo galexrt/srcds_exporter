@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/galexrt/srcds_exporter/models"
+	"github.com/galexrt/srcds_exporter/parser"
 
 	"github.com/james4k/rcon"
 	"github.com/prometheus/client_golang/prometheus"
@@ -21,32 +21,6 @@ var (
 	metricsAddr = flag.String("metrics.listen-address", ":9137", "The address to listen on for HTTP requests.")
 	debug       = flag.Bool("debug", true, "Debug output")
 )
-
-// Status Contains the server status
-type Status struct {
-	Hostname    string
-	Version     string
-	Map         string
-	PlayerCount PlayerCount
-	Players     map[int]Player
-}
-
-// PlayerCount contains current and max players of server
-type PlayerCount struct {
-	Current int
-	Max     int
-}
-
-// Player contains player information like username, steamID, etc.
-type Player struct {
-	Username string
-	SteamID  string
-	State    string
-	Ping     int
-	Loss     int
-	IP       string
-	ConnPort int
-}
 
 var (
 	serverMap = prometheus.NewCounter(prometheus.CounterOpts{
@@ -80,7 +54,7 @@ func init() {
 	prometheus.MustRegister(playerCountMax)
 }
 
-var metricUpdate = make(chan Status)
+var metricUpdate = make(chan models.Status)
 
 func main() {
 	flag.Parse()
@@ -117,7 +91,7 @@ func main() {
 					break
 				}
 				log.Debug("Read status command output")
-				metricUpdate <- *parseStatus(resp)
+				metricUpdate <- *parser.Parse(resp)
 
 				time.Sleep(5 * time.Second)
 			}
@@ -134,101 +108,24 @@ func manageMetrics() {
 		updateMetrics(status)
 	}
 }
-func updateMetrics(status Status) {
-	prometheus.Unregister(serverMap)
-	serverMap = prometheus.NewCounter(prometheus.CounterOpts{
-		Namespace: "gameserver",
-		Subsystem: "map",
-		Name:      "current",
-		Help:      "Current map played.",
-		ConstLabels: map[string]string{
-			"map": status.Map,
-		},
-	})
-	prometheus.MustRegister(serverMap)
-	serverMap.Inc()
+func updateMetrics(status models.Status) {
+	if !strings.Contains(serverMap.Desc().String(), "map=\""+status.Map+"\"") {
+		log.Debug("Update map metrics with new map name")
+		prometheus.Unregister(serverMap)
+		serverMap = prometheus.NewCounter(prometheus.CounterOpts{
+			Namespace: "gameserver",
+			Subsystem: "map",
+			Name:      "current",
+			Help:      "Current map played.",
+			ConstLabels: map[string]string{
+				"map": status.Map,
+			},
+		})
+		prometheus.MustRegister(serverMap)
+		serverMap.Inc()
+	} else {
+		log.Debug("No map update needed")
+	}
 	playerCountCurrent.Set(float64(status.PlayerCount.Current))
 	playerCountMax.Set(float64(status.PlayerCount.Max))
-}
-
-func parseStatus(resp string) *Status {
-	status := &Status{}
-	respLines := strings.Split(resp, "\n")
-
-	// Parse hostname, version, map, playerCount and players
-	status.Hostname = parseHostname(respLines[0])
-	status.Version = parseVersion(respLines[1])
-	status.Map = parseMap(respLines[3])
-	status.PlayerCount = *parsePlayerCount(respLines[4])
-	status.Players = parsePlayers(respLines[7:])
-	return status
-}
-
-func parseHostname(line string) string {
-	re := regexp.MustCompile(`(?m)^hostname: (.*)$`)
-	return re.FindStringSubmatch(line)[1]
-}
-
-func parseVersion(line string) string {
-	re := regexp.MustCompile(`(?m)^version[ ]*: (.*)$`)
-	return re.FindStringSubmatch(line)[1]
-}
-
-func parseMap(line string) string {
-	re := regexp.MustCompile(`(?m)^map[ ]*: ([a-zA-Z_]+).*$`)
-	return re.FindStringSubmatch(line)[1]
-}
-
-func parsePlayerCount(line string) *PlayerCount {
-	re := regexp.MustCompile(`(?m)^players[ ]*: ([0-9]+) \(([0-9]+) max\)$`)
-	parsed := re.FindStringSubmatch(line)
-	current, err := strconv.Atoi(parsed[1])
-	if err != nil {
-		panic(err)
-	}
-	max, err := strconv.Atoi(parsed[2])
-	if err != nil {
-		panic(err)
-	}
-	return &PlayerCount{
-		Current: current,
-		Max:     max,
-	}
-}
-
-func parsePlayers(lines []string) map[int]Player {
-	re := regexp.MustCompile(`(?m)^#[ ]+([0-9]+) "([^"]*)"[ ]+(STEAM_[0-1]:[0-1]:[0-9]+)[ ]+(([0-9]+:)+([0-9]+)?)+[ ]+([0-9]+)[ ]+([0-9]+)[ ]+([a-z]+)[ ]+((1[0-9]{1,2}|2(5[0-6]|[0-4][0-9])|[0-9]{1,2})((\.)(1[0-9]{0,2}|2(5[0-6]|[0-4][0-9])|[0-9]{1,2})){3}):([0-9]+)$`)
-	players := make(map[int]Player)
-	for _, line := range lines {
-		m := re.FindStringSubmatch(line)
-		if line == "" {
-			continue
-		}
-		id, err := strconv.Atoi(m[1])
-		if err != nil {
-			panic(err)
-		}
-		ping, err := strconv.Atoi(m[7])
-		if err != nil {
-			panic(err)
-		}
-		loss, err := strconv.Atoi(m[8])
-		if err != nil {
-			panic(err)
-		}
-		connPort, err := strconv.Atoi(m[11])
-		if err != nil {
-			panic(err)
-		}
-		players[id] = Player{
-			Username: m[2],
-			SteamID:  m[3],
-			State:    m[9],
-			Ping:     ping,
-			Loss:     loss,
-			IP:       m[10],
-			ConnPort: connPort,
-		}
-	}
-	return players
 }
