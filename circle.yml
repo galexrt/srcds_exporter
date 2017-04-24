@@ -6,16 +6,13 @@ dependencies:
   override:
     - mkdir -p ~/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}
     - ln -s ${HOME}/${CIRCLE_PROJECT_REPONAME} ${HOME}/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
-    # './...' is a relative pattern which means all subdirectories
     - go get github.com/mitchellh/gox
     - go get github.com/aktau/github-release
     - go get -t -d -v ./...
     - gox -output="srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
-    - github-release delete -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build
-    - github-release release --pre-release -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build
+#    - github-release release --pre-release -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build
     - for file in ./srcds_exporter_*; do github-release upload -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -t ${CIRCLE_BRANCH}-build -n "${file}" -f "${file}"; done
 
 test:
   override:
-    # './...' is a relative pattern which means all subdirectories
     - go test -v -race ./...
