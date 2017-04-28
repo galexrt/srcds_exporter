@@ -23,7 +23,7 @@ func Parse(resp string) *models.Status {
 }
 
 func parseHostname(line string) string {
-	re := regexp.MustCompile(`(?m)^hostname: (.*)$`)
+	re := regexp.MustCompile(`(?m)^hostname[ ]*: (.*)$`)
 	return re.FindStringSubmatch(line)[1]
 }
 

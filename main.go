@@ -7,37 +7,50 @@ import (
 	"os"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
+	steam "github.com/galexrt/go-steam"
 	"github.com/galexrt/srcds_exporter/models"
-	"github.com/galexrt/srcds_exporter/parser"
-
-	"github.com/james4k/rcon"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
-	debug = flag.Bool("debug", true, "Debug output")
+	debug          bool
+	connectTimeout string
 )
 
-var metricUpdate = make(chan models.Status)
+var (
+	log          = logrus.New()
+	metricUpdate = make(chan models.Status)
+)
+
+func init() {
+	flag.BoolVar(&debug, "debug", false, "debug")
+	flag.StringVar(&connectTimeout, "timeout", "15s", "Connection timeout")
+}
 
 func main() {
+	log.Out = os.Stdout
 	flag.Parse()
-	if *debug {
-		log.SetLevel(log.DebugLevel)
+	if debug {
+		log.Level = logrus.DebugLevel
 	}
+	steam.SetLog(log)
 	addr := os.Getenv("ADDR")
+	serverIdentification = addr
 	pass := os.Getenv("RCON_PASSWORD")
 	if addr == "" || pass == "" {
 		fmt.Println("Please set ADDR & RCON_PASSWORD.")
 		return
 	}
 	go func() {
-		manageMetrics()
+		//manageMetrics()
 	}()
 	go func() {
 		for {
-			con, err := rcon.Dial(addr, pass)
+			con, err := steam.Connect(addr, &steam.ConnectOptions{
+				RCONPassword: pass,
+				Timeout:      connectTimeout,
+			})
 			if err != nil {
 				fmt.Println(err)
 				time.Sleep(1 * time.Second)
@@ -45,20 +58,16 @@ func main() {
 			}
 			defer con.Close()
 			for {
-				_, err := con.Write("status")
+				resp, err := con.Send("status")
 				if err != nil {
-					fmt.Println(err)
-					break
-				}
-				resp, _, err := con.Read()
-				if err != nil {
-					fmt.Println(err)
+					log.Error(err)
 					break
 				}
 				log.Debug("Read status command output")
-				metricUpdate <- *parser.Parse(resp)
+				//metricUpdate <- *parser.Parse(resp)
+				fmt.Printf("RESP: %v\n", resp)
 
-				time.Sleep(5 * time.Second)
+				time.Sleep(4 * time.Second)
 			}
 		}
 	}()
@@ -67,8 +76,13 @@ func main() {
 }
 
 func manageMetrics() {
+	first := true
 	for {
 		status := <-metricUpdate
+		if first {
+			initMetrics(status)
+			first = false
+		}
 		log.Debugln("manageMetrics: Received metrics update")
 		updateMetrics(status)
 	}

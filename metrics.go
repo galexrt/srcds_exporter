@@ -4,9 +4,9 @@ import (
 	"flag"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/galexrt/srcds_exporter/models"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/log"
 )
 
 var (
@@ -14,55 +14,88 @@ var (
 )
 
 var (
-	serverMap = prometheus.NewCounter(prometheus.CounterOpts{
+	serverIdentification string
+	currentPlayersList   map[int]models.Player
+)
+
+// Metric vars
+var (
+	metricServerMap          prometheus.Counter
+	metricPlayerCountCurrent prometheus.Gauge
+	metricPlayerCountMax     prometheus.Gauge
+	metricPlayersMetrics     map[int]prometheus.Counter
+)
+
+func initMetrics(status models.Status) {
+	metricServerMap = prometheus.NewCounter(prometheus.CounterOpts{
 		Namespace: "gameserver",
 		Subsystem: "map",
 		Name:      "current",
 		Help:      "Current map played.",
 		ConstLabels: map[string]string{
-			"map": "N/A",
+			"server": serverIdentification,
+			"map":    status.Map,
 		},
 	})
-	playerCountCurrent = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace:   "gameserver",
-		Subsystem:   "player_count",
-		Name:        "current",
-		Help:        "Current player count on the server.",
-		ConstLabels: map[string]string{},
+	metricPlayerCountCurrent = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "gameserver",
+		Subsystem: "player_count",
+		Name:      "current",
+		Help:      "Current player count on the server.",
+		ConstLabels: map[string]string{
+			"server": serverIdentification,
+		},
 	})
-	playerCountMax = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace:   "gameserver",
-		Subsystem:   "player_count",
-		Name:        "max",
-		Help:        "Maximum player count on the server.",
-		ConstLabels: map[string]string{},
+	metricPlayerCountMax = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "gameserver",
+		Subsystem: "player_count",
+		Name:      "max",
+		Help:      "Maximum player count on the server.",
+		ConstLabels: map[string]string{
+			"server": serverIdentification,
+		},
 	})
-)
-
-func init() {
-	prometheus.MustRegister(serverMap)
-	prometheus.MustRegister(playerCountCurrent)
-	prometheus.MustRegister(playerCountMax)
+	prometheus.MustRegister(metricServerMap)
+	prometheus.MustRegister(metricPlayerCountCurrent)
+	prometheus.MustRegister(metricPlayerCountMax)
+	updatePlayersMetrics(status.Players)
 }
 
 func updateMetrics(status models.Status) {
-	if !strings.Contains(serverMap.Desc().String(), "map=\""+status.Map+"\"") {
-		log.Debug("Update map metrics with new map name")
-		prometheus.Unregister(serverMap)
-		serverMap = prometheus.NewCounter(prometheus.CounterOpts{
+	if !strings.Contains(metricServerMap.Desc().String(), "map=\""+status.Map+"\"") {
+		log.WithFields(logrus.Fields{
+			"map": status.Map,
+		}).Debug("exporter: map name update required")
+		prometheus.Unregister(metricServerMap)
+		metricServerMap = prometheus.NewCounter(prometheus.CounterOpts{
 			Namespace: "gameserver",
 			Subsystem: "map",
 			Name:      "current",
 			Help:      "Current map played.",
 			ConstLabels: map[string]string{
-				"map": status.Map,
+				"server": serverIdentification,
+				"map":    status.Map,
 			},
 		})
-		prometheus.MustRegister(serverMap)
-		serverMap.Inc()
+		metricServerMap.Inc()
+		prometheus.MustRegister(metricServerMap)
 	} else {
-		log.Debug("No map update needed")
+		log.WithFields(logrus.Fields{
+			"map": status.Map,
+		}).Debug("exporter: no map name update required")
 	}
-	playerCountCurrent.Set(float64(status.PlayerCount.Current))
-	playerCountMax.Set(float64(status.PlayerCount.Max))
+	metricPlayerCountCurrent.Set(float64(status.PlayerCount.Current))
+	metricPlayerCountMax.Set(float64(status.PlayerCount.Max))
+	updatePlayersMetrics(status.Players)
+}
+
+func updatePlayersMetrics(players map[int]models.Player) {
+	for userID, _ := range players {
+		if _, ok := currentPlayersList[userID]; ok {
+			log.WithFields(logrus.Fields{
+				"userid": userID,
+			}).Debug("exporter: userid")
+		}
+	}
+	return
 }
