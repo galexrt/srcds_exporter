@@ -100,6 +100,15 @@ func updatePlayersMetrics(players map[int]models.Player) {
 	log.Debugln("updatePlayersMetrics: called")
 	for userID, player := range players {
 		if _, ok := metricPlayersMetrics[userID]; !ok {
+			if metric, ok := playersMetricsToBeRemoved[userID]; ok {
+				metricPlayersMetrics[userID] = metric
+				delete(playersMetricsToBeRemoved, userID)
+				log.WithFields(logrus.Fields{
+					"userid": userID,
+					"player": player,
+				}).Debug("updatePlayersMetrics: user seemed to have reconnected, removing from toBeRemoved queue")
+				continue
+			}
 			metricPlayersMetrics[userID] = prometheus.NewCounter(prometheus.CounterOpts{
 				Namespace: "gameserver",
 				Subsystem: "players",
