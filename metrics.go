@@ -24,7 +24,8 @@ var (
 	metricPlayerCountCurrent  prometheus.Gauge
 	metricPlayerCountMax      prometheus.Gauge
 	metricPlayersMetrics      = make(map[int]prometheus.Counter)
-	playersMetricsToBeRemoved = make(map[int]prometheus.Counter)
+	metricsPlayersToBeRemoved = make(map[int]prometheus.Counter)
+	metricsMapsToBeRemoved    = make(map[int]prometheus.Counter)
 )
 
 func initMetrics(status models.Status) {
@@ -64,7 +65,7 @@ func initMetrics(status models.Status) {
 	go func() {
 		for {
 			<-time.After(3 * time.Minute)
-			cleanupPlayersMetrics()
+			cleanupMetrics()
 		}
 	}()
 }
@@ -74,7 +75,12 @@ func updateMetrics(status models.Status) {
 		log.WithFields(logrus.Fields{
 			"map": status.Map,
 		}).Debug("exporter: map name update required")
-		prometheus.Unregister(metricServerMap)
+		metricServerMap.Desc()
+		var key int
+		for key = range metricsMapsToBeRemoved {
+		}
+		metricServerMap.Desc()
+		metricsMapsToBeRemoved[key+1] = metricServerMap
 		metricServerMap = prometheus.NewCounter(prometheus.CounterOpts{
 			Namespace: "gameserver",
 			Subsystem: "map",
@@ -100,16 +106,16 @@ func updateMetrics(status models.Status) {
 func updatePlayersMetrics(players map[int]models.Player) {
 	log.Debugln("updatePlayersMetrics: called")
 	for userID, player := range players {
+		if metric, ok := metricsPlayersToBeRemoved[userID]; ok {
+			metricPlayersMetrics[userID] = metric
+			delete(metricsPlayersToBeRemoved, userID)
+			log.WithFields(logrus.Fields{
+				"userid": userID,
+				"player": player,
+			}).Debug("updatePlayersMetrics: user seemed to have reconnected or something, removing user from toBeRemoved queue")
+			continue
+		}
 		if _, ok := metricPlayersMetrics[userID]; !ok {
-			if metric, ok := playersMetricsToBeRemoved[userID]; ok {
-				metricPlayersMetrics[userID] = metric
-				delete(playersMetricsToBeRemoved, userID)
-				log.WithFields(logrus.Fields{
-					"userid": userID,
-					"player": player,
-				}).Debug("updatePlayersMetrics: user seemed to have reconnected, removing from toBeRemoved queue")
-				continue
-			}
 			metricPlayersMetrics[userID] = prometheus.NewCounter(prometheus.CounterOpts{
 				Namespace: "gameserver",
 				Subsystem: "players",
@@ -121,10 +127,11 @@ func updatePlayersMetrics(players map[int]models.Player) {
 				},
 			})
 			metricPlayersMetrics[userID].Inc()
-			prometheus.MustRegister(metricPlayersMetrics[userID])
+			err := prometheus.Register(metricPlayersMetrics[userID])
 			log.WithFields(logrus.Fields{
 				"userid": userID,
 				"player": player,
+				"error":  err,
 			}).Debug("updatePlayersMetrics: added user metric")
 		} else {
 			log.WithFields(logrus.Fields{
@@ -136,7 +143,7 @@ func updatePlayersMetrics(players map[int]models.Player) {
 	for userID, metric := range metricPlayersMetrics {
 		if _, ok := players[userID]; !ok {
 			metric.Desc()
-			playersMetricsToBeRemoved[userID] = metric
+			metricsPlayersToBeRemoved[userID] = metric
 			delete(metricPlayersMetrics, userID)
 			log.WithFields(logrus.Fields{
 				"userid": userID,
@@ -145,8 +152,11 @@ func updatePlayersMetrics(players map[int]models.Player) {
 	}
 }
 
-func cleanupPlayersMetrics() {
-	for _, metric := range playersMetricsToBeRemoved {
+func cleanupMetrics() {
+	for _, metric := range metricsMapsToBeRemoved {
+		prometheus.Unregister(metric)
+	}
+	for _, metric := range metricsPlayersToBeRemoved {
 		prometheus.Unregister(metric)
 	}
 }
