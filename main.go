@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	debug          bool
-	connectTimeout string
+	debug            bool
+	connectTimeout   string
+	metricUpdateTime string
 )
 
 var (
@@ -27,6 +28,7 @@ var (
 func init() {
 	flag.BoolVar(&debug, "debug", false, "debug")
 	flag.StringVar(&connectTimeout, "timeout", "15s", "Connection timeout")
+	flag.StringVar(&metricUpdateTime, "metricupdatetime", "12s", "Metrics update time")
 }
 
 func main() {
@@ -42,6 +44,10 @@ func main() {
 	if addr == "" || pass == "" {
 		fmt.Println("Please set ADDR & RCON_PASSWORD.")
 		return
+	}
+	metricUpdateTimeDuration, err := time.ParseDuration(metricUpdateTime)
+	if err != nil {
+		panic(err)
 	}
 	go func() {
 		manageMetrics()
@@ -67,7 +73,7 @@ func main() {
 				log.Debug("Read status command output")
 				metricUpdate <- *parser.Parse(resp)
 
-				time.Sleep(4 * time.Second)
+				time.Sleep(metricUpdateTimeDuration)
 			}
 		}
 	}()
