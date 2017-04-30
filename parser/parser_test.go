@@ -12,11 +12,11 @@ var parseHostnameTests = []struct {
 	expected string
 }{
 	{
-		`hostname: Example server`,
+		`Example server`,
 		"Example server",
 	},
 	{
-		`hostname: [TEST] ÜÄÖÜ server`,
+		`[TEST] ÜÄÖÜ server`,
 		"[TEST] ÜÄÖÜ server",
 	},
 }
@@ -35,7 +35,7 @@ var parseVersionTests = []struct {
 	expected string
 }{
 	{
-		`version : 16.12.01/24 6729 secure`,
+		`16.12.01/24 6729 secure`,
 		"16.12.01/24 6729 secure",
 	},
 }
@@ -54,7 +54,7 @@ var parseMapTests = []struct {
 	expected string
 }{
 	{
-		`map     : rp_retribution_v2 at: 0 x, 0 y, 0 z`,
+		`rp_retribution_v2 at: 0 x, 0 y, 0 z`,
 		"rp_retribution_v2",
 	},
 }
@@ -73,7 +73,7 @@ var parsePlayerCountTests = []struct {
 	expected *models.PlayerCount
 }{
 	{
-		`players : 1 (64 max)`,
+		`1 (64 max)`,
 		&models.PlayerCount{
 			Current: 1,
 			Max:     64,

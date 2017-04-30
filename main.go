@@ -10,6 +10,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	steam "github.com/galexrt/go-steam"
 	"github.com/galexrt/srcds_exporter/models"
+	"github.com/galexrt/srcds_exporter/parser"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -43,7 +44,7 @@ func main() {
 		return
 	}
 	go func() {
-		//manageMetrics()
+		manageMetrics()
 	}()
 	go func() {
 		for {
@@ -64,8 +65,7 @@ func main() {
 					break
 				}
 				log.Debug("Read status command output")
-				//metricUpdate <- *parser.Parse(resp)
-				fmt.Printf("RESP: %v\n", resp)
+				metricUpdate <- *parser.Parse(resp)
 
 				time.Sleep(4 * time.Second)
 			}
@@ -82,8 +82,9 @@ func manageMetrics() {
 		if first {
 			initMetrics(status)
 			first = false
+			log.Debug("exporter: init metrics")
 		}
-		log.Debugln("manageMetrics: Received metrics update")
+		log.Debug("exporter: received metrics update")
 		updateMetrics(status)
 	}
 }
