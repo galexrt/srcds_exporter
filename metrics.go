@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	metricsAddr = flag.String("metrics.listen-address", ":9137", "The address to listen on for HTTP requests.")
+	metricsAddr       string
+	metricsUpdateTime string
 )
 
 var (
@@ -27,6 +28,11 @@ var (
 	metricsPlayersToBeRemoved = make(map[int]prometheus.Counter)
 	metricsMapsToBeRemoved    = make(map[int]prometheus.Counter)
 )
+
+func init() {
+	flag.StringVar(&metricsAddr, "metrics.listen-address", ":9137", "The address to listen on for HTTP requests.")
+	flag.StringVar(&metricsUpdateTime, "metrics.update-time", "12s", "Metrics update time")
+}
 
 func initMetrics(status models.Status) {
 	metricServerMap = prometheus.NewCounter(prometheus.CounterOpts{

@@ -15,9 +15,9 @@ import (
 )
 
 var (
-	debug            bool
-	connectTimeout   string
-	metricUpdateTime string
+	help           bool
+	debug          bool
+	connectTimeout string
 )
 
 var (
@@ -26,14 +26,19 @@ var (
 )
 
 func init() {
-	flag.BoolVar(&debug, "debug", false, "debug")
+	flag.BoolVar(&help, "help", false, "Show the help menu")
+	flag.BoolVar(&debug, "debug", false, "Enable debug output")
 	flag.StringVar(&connectTimeout, "timeout", "15s", "Connection timeout")
-	flag.StringVar(&metricUpdateTime, "metricupdatetime", "12s", "Metrics update time")
 }
 
 func main() {
-	log.Out = os.Stdout
 	flag.Parse()
+	if help {
+		fmt.Println(os.Args[0] + " [FLAGS]")
+		flag.PrintDefaults()
+		os.Exit(0)
+	}
+	log.Out = os.Stdout
 	if debug {
 		log.Level = logrus.DebugLevel
 	}
@@ -45,7 +50,7 @@ func main() {
 		fmt.Println("Please set ADDR & RCON_PASSWORD.")
 		return
 	}
-	metricUpdateTimeDuration, err := time.ParseDuration(metricUpdateTime)
+	metricsUpdateTimeDuration, err := time.ParseDuration(metricsUpdateTime)
 	if err != nil {
 		panic(err)
 	}
@@ -73,12 +78,12 @@ func main() {
 				log.Debug("Read status command output")
 				metricUpdate <- *parser.Parse(resp)
 
-				time.Sleep(metricUpdateTimeDuration)
+				time.Sleep(metricsUpdateTimeDuration)
 			}
 		}
 	}()
 	http.Handle("/metrics", promhttp.Handler())
-	log.Fatal(http.ListenAndServe(*metricsAddr, nil))
+	log.Fatal(http.ListenAndServe(metricsAddr, nil))
 }
 
 func manageMetrics() {
