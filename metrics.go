@@ -56,6 +56,7 @@ func initMetrics(status models.Status) {
 			"server": serverIdentification,
 		},
 	})
+	metricServerMap.Inc()
 	prometheus.MustRegister(metricServerMap)
 	prometheus.MustRegister(metricPlayerCountCurrent)
 	prometheus.MustRegister(metricPlayerCountMax)
