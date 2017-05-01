@@ -24,8 +24,8 @@ var (
 	metricServerMap           prometheus.Gauge
 	metricPlayerCountCurrent  prometheus.Gauge
 	metricPlayerCountMax      prometheus.Gauge
-	metricPlayersMetrics      = make(map[int]prometheus.Gauge)
-	metricsPlayersToBeRemoved = make(map[int]prometheus.Gauge)
+	metricPlayersMetrics      = make(map[int][]prometheus.Gauge)
+	metricsPlayersToBeRemoved = make(map[int][]prometheus.Gauge)
 	metricsMapsToBeRemoved    = make(map[int]prometheus.Gauge)
 )
 
@@ -109,7 +109,8 @@ func updatePlayersMetrics(players map[int]models.Player) {
 	log.Debugln("updatePlayersMetrics: called")
 	for userID, player := range players {
 		if _, ok := metricsPlayersToBeRemoved[userID]; ok {
-			metricsPlayersToBeRemoved[userID].Inc()
+			metricsPlayersToBeRemoved[userID][0].Inc()
+			metricsPlayersToBeRemoved[userID][1].Inc()
 			metricPlayersMetrics[userID] = metricsPlayersToBeRemoved[userID]
 			delete(metricsPlayersToBeRemoved, userID)
 			log.WithFields(logrus.Fields{
@@ -119,24 +120,66 @@ func updatePlayersMetrics(players map[int]models.Player) {
 			continue
 		}
 		if _, ok := metricPlayersMetrics[userID]; !ok {
-			metricPlayersMetrics[userID] = prometheus.NewGauge(prometheus.GaugeOpts{
-				Namespace: "gameserver",
-				Subsystem: "players",
-				Name:      "current",
-				Help:      "Current users by Steam ID playing on the server.",
-				ConstLabels: map[string]string{
-					"server":  serverIdentification,
-					"steamid": player.SteamID,
-				},
-			})
-			metricPlayersMetrics[userID].Inc()
-			err := prometheus.Register(metricPlayersMetrics[userID])
+			metricPlayersMetrics[userID] = []prometheus.Gauge{
+				prometheus.NewGauge(prometheus.GaugeOpts{
+					Namespace: "gameserver",
+					Subsystem: "players_playing",
+					Name:      "current",
+					Help:      "Current users by Steam ID on the server.",
+					ConstLabels: map[string]string{
+						"server":  serverIdentification,
+						"steamid": player.SteamID,
+					},
+				}),
+				prometheus.NewGauge(prometheus.GaugeOpts{
+					Namespace: "gameserver",
+					Subsystem: "players_ping",
+					Name:      "current",
+					Help:      "Current users ping by Steam ID on the server.",
+					ConstLabels: map[string]string{
+						"server":  serverIdentification,
+						"steamid": player.SteamID,
+					},
+				}),
+				prometheus.NewGauge(prometheus.GaugeOpts{
+					Namespace: "gameserver",
+					Subsystem: "players_loss",
+					Name:      "current",
+					Help:      "Current users loss by Steam ID on the server.",
+					ConstLabels: map[string]string{
+						"server":  serverIdentification,
+						"steamid": player.SteamID,
+					},
+				}),
+			}
+			metricPlayersMetrics[userID][0].Inc()
+			metricPlayersMetrics[userID][1].Set(float64(player.Ping))
+			metricPlayersMetrics[userID][2].Set(float64(player.Loss))
+			err := prometheus.Register(metricPlayersMetrics[userID][0])
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"error": err,
+				}).Warn("updatePlayersMetrics: error registering user online metric")
+			}
+			err = prometheus.Register(metricPlayersMetrics[userID][1])
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"error": err,
+				}).Warn("updatePlayersMetrics: error registering user ping metric")
+			}
+			err = prometheus.Register(metricPlayersMetrics[userID][2])
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"error": err,
+				}).Warn("updatePlayersMetrics: error registering user loss metric")
+			}
 			log.WithFields(logrus.Fields{
 				"userid": userID,
 				"player": player,
-				"error":  err,
 			}).Debug("updatePlayersMetrics: added user metric")
 		} else {
+			metricPlayersMetrics[userID][1].Set(float64(player.Ping))
+			metricPlayersMetrics[userID][2].Set(float64(player.Loss))
 			log.WithFields(logrus.Fields{
 				"userid": userID,
 				"player": player,
@@ -145,7 +188,9 @@ func updatePlayersMetrics(players map[int]models.Player) {
 	}
 	for userID := range metricPlayersMetrics {
 		if _, ok := players[userID]; !ok {
-			metricPlayersMetrics[userID].Dec()
+			metricPlayersMetrics[userID][0].Dec()
+			metricPlayersMetrics[userID][1].Set(0)
+			metricPlayersMetrics[userID][2].Set(0)
 			metricsPlayersToBeRemoved[userID] = metricPlayersMetrics[userID]
 			delete(metricPlayersMetrics, userID)
 			log.WithFields(logrus.Fields{
@@ -159,7 +204,11 @@ func cleanupMetrics() {
 	for _, metric := range metricsMapsToBeRemoved {
 		prometheus.Unregister(metric)
 	}
+	metricsMapsToBeRemoved = make(map[int]prometheus.Gauge)
 	for _, metric := range metricsPlayersToBeRemoved {
-		prometheus.Unregister(metric)
+		prometheus.Unregister(metric[0])
+		prometheus.Unregister(metric[1])
+		prometheus.Unregister(metric[2])
 	}
+	metricsPlayersToBeRemoved = make(map[int][]prometheus.Gauge)
 }
