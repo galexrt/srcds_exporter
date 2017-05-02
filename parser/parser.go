@@ -110,7 +110,7 @@ func parsePlayer(line string) (int, models.Player) {
 	return userID, models.Player{
 		Username: m[2],
 		SteamID:  m[3],
-		State:    m[8],
+		State:    m[6],
 		Ping:     ping,
 		Loss:     loss,
 		IP:       m[7],
