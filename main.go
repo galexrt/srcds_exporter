@@ -18,6 +18,8 @@ var (
 	help           bool
 	debug          bool
 	connectTimeout string
+	addr           string
+	rconPassword   string
 )
 
 var (
@@ -29,6 +31,8 @@ func init() {
 	flag.BoolVar(&help, "help", false, "Show the help menu")
 	flag.BoolVar(&debug, "debug", false, "Enable debug output")
 	flag.StringVar(&connectTimeout, "timeout", "15s", "Connection timeout")
+	flag.StringVar(&addr, "addr", "127.0.0.1:27015", "Set the gameserver address (can be ADDR env var too)")
+	flag.StringVar(&rconPassword, "rconpassword", "127.0.0.1:27015", "Set the rcon password (can be RCON_PASSWORD env var too)")
 }
 
 func main() {
@@ -43,13 +47,17 @@ func main() {
 		log.Level = logrus.DebugLevel
 	}
 	steam.SetLog(log)
-	addr := os.Getenv("ADDR")
-	serverIdentification = addr
-	pass := os.Getenv("RCON_PASSWORD")
-	if addr == "" || pass == "" {
-		fmt.Println("Please set ADDR & RCON_PASSWORD.")
-		return
+	if addr == "" {
+		addr = os.Getenv("ADDR")
 	}
+	if rconPassword == "" {
+		rconPassword = os.Getenv("RCON_PASSWORD")
+	}
+	if addr == "" || rconPassword == "" {
+		log.Errorln("addr (or ADDR) and rconpassword (or RCON_PASSWORD) flag(s) or environment variable(s) not given.")
+		os.Exit(2)
+	}
+	serverIdentification = addr
 	metricsUpdateTimeDuration, err := time.ParseDuration(metricsUpdateTime)
 	if err != nil {
 		panic(err)
@@ -60,7 +68,7 @@ func main() {
 	go func() {
 		for {
 			con, err := steam.Connect(addr, &steam.ConnectOptions{
-				RCONPassword: pass,
+				RCONPassword: rconPassword,
 				Timeout:      connectTimeout,
 			})
 			if err != nil {

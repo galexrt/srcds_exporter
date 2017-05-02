@@ -68,6 +68,7 @@ func initMetrics(status models.Status) {
 	prometheus.MustRegister(metricPlayerCountCurrent)
 	prometheus.MustRegister(metricPlayerCountMax)
 	updatePlayersMetrics(status.Players)
+	// Start cleanupMetrics after every 8 minutes
 	go func() {
 		for {
 			<-time.After(8 * time.Minute)
@@ -77,9 +78,15 @@ func initMetrics(status models.Status) {
 }
 
 func updateMetrics(status models.Status) {
-	if !strings.Contains(metricServerMap.Desc().String(), "map=\""+status.Map+"\"") {
+	updateMapMetric(status.Map)
+	updatePlayerCount(status.PlayerCount)
+	updatePlayersMetrics(status.Players)
+}
+
+func updateMapMetric(currentMap string) {
+	if !strings.Contains(metricServerMap.Desc().String(), "map=\""+currentMap+"\"") {
 		log.WithFields(logrus.Fields{
-			"map": status.Map,
+			"map": currentMap,
 		}).Debug("exporter: map name update required")
 		metricServerMap.Dec()
 		metricsMapsToBeRemoved[int(len(metricsMapsToBeRemoved)+1)] = metricServerMap
@@ -90,19 +97,21 @@ func updateMetrics(status models.Status) {
 			Help:      "Current map played.",
 			ConstLabels: map[string]string{
 				"server": serverIdentification,
-				"map":    status.Map,
+				"map":    currentMap,
 			},
 		})
 		metricServerMap.Inc()
 		prometheus.MustRegister(metricServerMap)
 	} else {
 		log.WithFields(logrus.Fields{
-			"map": status.Map,
+			"map": currentMap,
 		}).Debug("exporter: no map name update required")
 	}
-	metricPlayerCountCurrent.Set(float64(status.PlayerCount.Current))
-	metricPlayerCountMax.Set(float64(status.PlayerCount.Max))
-	updatePlayersMetrics(status.Players)
+}
+
+func updatePlayerCount(playerCount models.PlayerCount) {
+	metricPlayerCountCurrent.Set(float64(playerCount.Current))
+	metricPlayerCountMax.Set(float64(playerCount.Max))
 }
 
 func updatePlayersMetrics(players map[int]models.Player) {
