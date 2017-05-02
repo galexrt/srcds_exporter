@@ -31,8 +31,8 @@ func init() {
 	flag.BoolVar(&help, "help", false, "Show the help menu")
 	flag.BoolVar(&debug, "debug", false, "Enable debug output")
 	flag.StringVar(&connectTimeout, "timeout", "15s", "Connection timeout")
-	flag.StringVar(&addr, "addr", "127.0.0.1:27015", "Set the gameserver address (can be ADDR env var too)")
-	flag.StringVar(&rconPassword, "rconpassword", "127.0.0.1:27015", "Set the rcon password (can be RCON_PASSWORD env var too)")
+	flag.StringVar(&addr, "addr", "", "Set the gameserver address (can be ADDR env var too)")
+	flag.StringVar(&rconPassword, "rconpassword", "", "Set the rcon password (can be RCON_PASSWORD env var too)")
 }
 
 func main() {
