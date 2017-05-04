@@ -11,7 +11,7 @@ dependencies:
     - go get github.com/mitchellh/gox
     - go get github.com/tcnksm/ghr
     - ls -ahl ${HOME}/
-    - gox -output="${HOME}/output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
+    - gox -output="${HOME}/output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ${HOME}/${CIRCLE_PROJECT_REPONAME}/...
     - >
       ghr -draft -replace -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -ldflags " \
         -X {{repoPath}}/version.Version=${VERSION} \
