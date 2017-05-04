@@ -1,7 +1,8 @@
 machine:
   environment:
     PATH: "/usr/local/go/bin:/usr/local/go_workspace/bin:~/.go_workspace/bin:${PATH}"
-    VERSION: "0.0.1"
+    GOPATH: "${HOME}/.go_workspace:/usr/local/go_workspace:${HOME}/.go_project"
+    VERSION: "2.0.0-dev"
 
 dependencies:
   override:
@@ -9,8 +10,7 @@ dependencies:
     - ln -s ${HOME}/${CIRCLE_PROJECT_REPONAME} ${HOME}/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
     - go get github.com/mitchellh/gox
     - go get github.com/tcnksm/ghr
-#    - go get -t -d -v ./...
-    - gox -output="./output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
+    - gox -output="${HOME}/output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
     - >
       ghr -draft -replace -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -ldflags " \
         -X {{repoPath}}/version.Version=${VERSION} \
@@ -18,7 +18,7 @@ dependencies:
         -X {{repoPath}}/version.Branch=${CIRCLE_BRANCH} \
         -X {{repoPath}}/version.BuildUser=$(whoami)@$(hostname) \
         -X {{repoPath}}/version.BuildDate=$(date)"
-        ${CIRCLE_BRANCH}-build ./output
+        ${CIRCLE_BRANCH}-build "${HOME}/output"
 
 test:
   override:
