@@ -1,6 +1,7 @@
 ---
 options:
   rcontimeout: 60s
+  cachetimeout: 15s
 servers:
   example_server1:
     address: 127.0.0.1:27015

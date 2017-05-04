@@ -8,6 +8,13 @@ import (
 	cache "github.com/patrickmn/go-cache"
 )
 
+type ConnectionOptions struct {
+	Addr           string
+	RconPassword   string
+	ConnectTimeout string
+	CacheTimeout   string
+}
+
 // Connection struct contains all variables necessary for the connection
 type Connection struct {
 	Name    string

@@ -1,6 +1,7 @@
 package connector
 
 import (
+	"fmt"
 	"time"
 
 	steam "github.com/galexrt/go-steam"
@@ -25,29 +26,42 @@ func (cn *Connector) GetConnections() (map[string]*Connection, error) {
 }
 
 // NewConnection Add a new connection and initiates first contact connection
-func (cn *Connector) NewConnection(name, addr, rconPassword string, connectTimeout string) error {
-	if _, ok := cn.connections[addr]; ok {
+func (cn *Connector) NewConnection(name string, opts *ConnectionOptions) error {
+	if _, ok := cn.connections[opts.Addr]; ok {
 		return nil
 	}
-	con, err := steam.Connect(addr, &steam.ConnectOptions{
-		RCONPassword: rconPassword,
-		Timeout:      connectTimeout,
-	})
+	con, err := steam.Connect(opts.Addr,
+		&steam.ConnectOptions{
+			RCONPassword: opts.RconPassword,
+			Timeout:      opts.ConnectTimeout,
+		})
 	if err != nil {
 		return err
 	}
-	cn.connections[addr] = &Connection{
-		Name: name,
-		con:  con,
-		// TODO make cache time configurable?
-		cache: *cache.New(10*time.Second, 11*time.Second),
+	var (
+		conTimeoutParsed   time.Duration
+		cacheTimeoutParsed time.Duration
+	)
+	conTimeoutParsed, err = time.ParseDuration(opts.ConnectTimeout)
+	if err != nil {
+		return err
+	}
+	cacheTimeoutParsed, err = time.ParseDuration(opts.CacheTimeout)
+	if err != nil {
+		return err
+	}
+	fmt.Print(cacheTimeoutParsed)
+	// TODO make cache time configurable?
+	cn.connections[opts.Addr] = &Connection{
+		Name:  name,
+		con:   con,
+		cache: *cache.New(cacheTimeoutParsed, 11*time.Second),
 		opts: map[string]string{
-			"Address":      addr,
-			"RCONPassword": rconPassword,
-			"Timeout":      connectTimeout,
+			"Address":      opts.Addr,
+			"RCONPassword": opts.RconPassword,
+			"Timeout":      opts.ConnectTimeout,
 		},
-		// TODO make time configurable? use connectTimeout
-		created: time.Now().Add(2 * time.Second),
+		created: time.Now().Add(conTimeoutParsed),
 	}
 	return nil
 }

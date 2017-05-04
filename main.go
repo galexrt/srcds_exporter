@@ -85,7 +85,8 @@ type Config struct {
 
 // Options
 type Options struct {
-	RconTimeout string `yaml:"rcontimeout"`
+	RconTimeout  string `yaml:"rcontimeout"`
+	CacheTimeout string `yaml:"cachetimeout"`
 }
 
 // Server
@@ -200,7 +201,13 @@ func loadConnections(cc *CurrentConfig) *connector.Connector {
 	for name, server := range cc.C.Servers {
 		var err error
 		for i := 0; i < 5; i++ {
-			if err = connections.NewConnection(name, server.Address, server.RconPassword, cc.C.Options.RconTimeout); err == nil {
+			if err = connections.NewConnection(name,
+				&connector.ConnectionOptions{
+					Addr:           server.Address,
+					RconPassword:   server.RconPassword,
+					ConnectTimeout: cc.C.Options.RconTimeout,
+					CacheTimeout:   cc.C.Options.CacheTimeout,
+				}); err == nil {
 				break
 			}
 		}
