@@ -10,8 +10,8 @@ dependencies:
     - ln -s ${HOME}/${CIRCLE_PROJECT_REPONAME} ${HOME}/.go_workspace/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
     - go get github.com/mitchellh/gox
     - go get github.com/tcnksm/ghr
-    - ls -ahl ${HOME}/.go_project ${HOME}/.go_workspace
-    - gox -gocmd="govendor" -output="${HOME}/output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
+    - ls -ahl ${HOME}/
+    - gox -output="${HOME}/output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
     - >
       ghr -draft -replace -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -ldflags " \
         -X {{repoPath}}/version.Version=${VERSION} \
