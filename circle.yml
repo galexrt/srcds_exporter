@@ -1,16 +1,17 @@
 machine:
   environment:
     PATH: "/usr/local/go/bin:/usr/local/go_workspace/bin:~/.go_workspace/bin:${PATH}"
-    GOPATH: "${HOME}/.go_workspace:/usr/local/go_workspace:${HOME}/.go_project:${HOME}/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/vendor"
+    GOPATH: "${HOME}/.go_workspace:/usr/local/go_workspace"
     VERSION: "2.0.0-dev"
 
 dependencies:
   override:
-    - mkdir -p ~/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME} ./output
-    - ln -s ${HOME}/${CIRCLE_PROJECT_REPONAME} ${HOME}/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+    - mkdir -p ${HOME}/.go_workspace/src/github.com/${CIRCLE_PROJECT_USERNAME} ./output
+    - ln -s ${HOME}/${CIRCLE_PROJECT_REPONAME} ${HOME}/.go_workspace/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
     - go get github.com/mitchellh/gox
     - go get github.com/tcnksm/ghr
-    - gox -output="${HOME}/output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
+    - tree ${HOME}/.go_workspace
+    - gox -gocmd="govendor" -output="${HOME}/output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose ./...
     - >
       ghr -draft -replace -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -ldflags " \
         -X {{repoPath}}/version.Version=${VERSION} \
