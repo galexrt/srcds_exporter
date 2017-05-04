@@ -18,3 +18,6 @@ map | Current map played
 Name     | Description
 ---------|-------------
 players | Report all players by their Steam ID as a metric
+
+## Usage
+To get a list of a list of all flags, use the `--help` flag.

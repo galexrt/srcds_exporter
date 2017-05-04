@@ -9,13 +9,15 @@ import (
 )
 
 var (
-	playerRegex   = regexp.MustCompile(`(?m)^#[ ]+([0-9]+)[ ]+"([^"]*)"[ ]+(STEAM_[0-1]:[0-1]:[0-9]+)[ ]+[0-9:]+[ ]+([0-9]+)[ ]+([0-9]+)[ ]+([a-z]+)[ ]+(([0-9]{1,3}.){3}[0-9]{1,3}):([0-9]+)$`)
-	hostnameRegex = regexp.MustCompile(`(?m)^hostname[ ]*: (.*)$`)
-	// TODO Move all regexs here
+	hostnameRegex    = regexp.MustCompile(`(?m)^hostname[ ]*: (.*)$`)
+	versionRegex     = regexp.MustCompile(`(?m)^version[ ]*: (.*)$`)
+	mapRegex         = regexp.MustCompile(`(?m)^map[ ]*: ([a-zA-Z_0-9-]+) .*$`)
+	playerCountRegex = regexp.MustCompile(`(?m)^players[ ]*: ([0-9]+) \(([0-9]+) max\)$`)
+	playerRegex      = regexp.MustCompile(`(?m)^#[ ]+([0-9]+)[ ]+"([^"]*)"[ ]+(STEAM_[0-1]:[0-1]:[0-9]+)[ ]+[0-9:]+[ ]+([0-9]+)[ ]+([0-9]+)[ ]+([a-z]+)[ ]+(([0-9]{1,3}.){3}[0-9]{1,3}):([0-9]+)$`)
 )
 
-func ParseHostname(lines string) string {
-	result := hostnameRegex.FindStringSubmatch(lines)
+func ParseHostname(input string) string {
+	result := hostnameRegex.FindStringSubmatch(input)
 	if len(result) > 1 {
 		return result[1]
 	} else {
@@ -23,9 +25,8 @@ func ParseHostname(lines string) string {
 	}
 }
 
-func ParseVersion(lines string) string {
-	re := regexp.MustCompile(`(?m)^version[ ]*: (.*)$`)
-	result := re.FindStringSubmatch(lines)
+func ParseVersion(input string) string {
+	result := versionRegex.FindStringSubmatch(input)
 	if len(result) > 1 {
 		return result[1]
 	} else {
@@ -33,9 +34,8 @@ func ParseVersion(lines string) string {
 	}
 }
 
-func ParseMap(lines string) string {
-	re := regexp.MustCompile(`(?m)^map[ ]*: ([a-zA-Z_0-9-]+) .*$`)
-	result := re.FindStringSubmatch(lines)
+func ParseMap(input string) string {
+	result := mapRegex.FindStringSubmatch(input)
 	if len(result) > 1 {
 		return result[1]
 	} else {
@@ -43,9 +43,8 @@ func ParseMap(lines string) string {
 	}
 }
 
-func ParsePlayerCount(lines string) *models.PlayerCount {
-	re := regexp.MustCompile(`(?m)^players[ ]*: ([0-9]+) \(([0-9]+) max\)$`)
-	result := re.FindStringSubmatch(lines)
+func ParsePlayerCount(input string) *models.PlayerCount {
+	result := playerCountRegex.FindStringSubmatch(input)
 	if len(result) > 2 {
 		current, err := strconv.Atoi(result[1])
 		if err != nil {
@@ -63,9 +62,10 @@ func ParsePlayerCount(lines string) *models.PlayerCount {
 		return &models.PlayerCount{}
 	}
 }
-func ParsePlayers(lines string) map[string]*models.Player {
-	lines = strings.Replace(lines, "\000", "", -1)
-	matches := playerRegex.FindAllStringSubmatch(lines, -1)
+
+func ParsePlayers(input string) map[string]*models.Player {
+	input = strings.Replace(input, "\000", "", -1)
+	matches := playerRegex.FindAllStringSubmatch(input, -1)
 	players := make(map[string]*models.Player)
 	if len(matches) == 0 {
 		return players

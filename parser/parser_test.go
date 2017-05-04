@@ -35,7 +35,7 @@ var parseVersionTests = []struct {
 	expected string
 }{
 	{
-		`players : 16.12.01/24 6729 secure`,
+		`version : 16.12.01/24 6729 secure`,
 		"16.12.01/24 6729 secure",
 	},
 }
@@ -73,7 +73,7 @@ var parsePlayerCountTests = []struct {
 	expected *models.PlayerCount
 }{
 	{
-		`1 (64 max)`,
+		`players : 1 (64 max)`,
 		&models.PlayerCount{
 			Current: 1,
 			Max:     64,
@@ -92,14 +92,15 @@ func TestParsePlayerCount(t *testing.T) {
 
 var parsePlayersTests = []struct {
 	request  string
-	expected map[int]models.Player
+	expected map[string]*models.Player
 }{
 	{
 		`#    218 "TestUser1"      STEAM_0:0:1015738 07:36       65    0 active 10.10.220.12:27005`,
-		map[int]models.Player{
-			218: *&models.Player{
+		map[string]*models.Player{
+			"STEAM_0:0:1015738": &models.Player{
 				Username: "TestUser1",
 				SteamID:  "STEAM_0:0:1015738",
+				UserID:   218,
 				Ping:     65,
 				Loss:     0,
 				State:    "active",
