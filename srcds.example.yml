@@ -1,0 +1,7 @@
+---
+options:
+  rcontimeout: 60s
+servers:
+  modern_roleplay:
+    address: 127.0.0.1:27015
+    rconpassword: YOUR_RCON_PASSWORD
