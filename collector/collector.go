@@ -18,7 +18,7 @@ type Collector interface {
 	Update(ch chan<- prometheus.Metric) error
 }
 
-// SetConnector
+// SetConnector a given connector for the collectors
 func SetConnector(con *connector.Connector) {
 	connections = con
 }

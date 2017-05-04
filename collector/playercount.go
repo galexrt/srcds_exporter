@@ -44,7 +44,10 @@ func (c *playerCountCollector) Update(ch chan<- prometheus.Metric) error {
 		if err != nil {
 			return err
 		}
-		playerCount := parser.ParsePlayerCount(resp)
+		playerCount, err := parser.ParsePlayerCount(resp)
+		if err != nil {
+			return err
+		}
 		current := prometheus.NewDesc(
 			prometheus.BuildFQName(Namespace, "playercount", "current"),
 			"The current map on the server.",

@@ -19,6 +19,10 @@ var parseHostnameTests = []struct {
 		`hostname: [TEST] ÜÄÖÜ server`,
 		"[TEST] ÜÄÖÜ server",
 	},
+	{
+		`nope: nope`,
+		"",
+	},
 }
 
 func TestParseHostname(t *testing.T) {
@@ -38,6 +42,10 @@ var parseVersionTests = []struct {
 		`version : 16.12.01/24 6729 secure`,
 		"16.12.01/24 6729 secure",
 	},
+	{
+		`nope: nope`,
+		"",
+	},
 }
 
 func TestParseVersion(t *testing.T) {
@@ -56,6 +64,10 @@ var parseMapTests = []struct {
 	{
 		`map     : rp_retribution_v2 at: 0 x, 0 y, 0 z`,
 		"rp_retribution_v2",
+	},
+	{
+		`nope: nope`,
+		"",
 	},
 }
 
@@ -79,11 +91,15 @@ var parsePlayerCountTests = []struct {
 			Max:     64,
 		},
 	},
+	{
+		`nope: nope`,
+		nil,
+	},
 }
 
 func TestParsePlayerCount(t *testing.T) {
 	for _, tt := range parsePlayerCountTests {
-		actual := ParsePlayerCount(tt.request)
+		actual, _ := ParsePlayerCount(tt.request)
 		if !reflect.DeepEqual(actual, tt.expected) {
 			t.Errorf("ParsePlayerCount(%s): expected %v, actual %v", tt.request, tt.expected, actual)
 		}
@@ -109,11 +125,15 @@ var parsePlayersTests = []struct {
 			},
 		},
 	},
+	{
+		`NOPE`,
+		nil,
+	},
 }
 
 func TestParsePlayers(t *testing.T) {
 	for _, tt := range parsePlayersTests {
-		actual := ParsePlayers(tt.request)
+		actual, _ := ParsePlayers(tt.request)
 		if !reflect.DeepEqual(actual, tt.expected) {
 			t.Errorf("parsePlayers(%s): expected %v, actual %v", tt.request, tt.expected, actual)
 		}

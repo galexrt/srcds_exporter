@@ -65,7 +65,10 @@ func (c *playersCollector) Update(ch chan<- prometheus.Metric) error {
 		if err != nil {
 			return err
 		}
-		players := parser.ParsePlayers(resp)
+		players, err := parser.ParsePlayers(resp)
+		if err != nil {
+			return err
+		}
 		//var value = 1
 		for _, player := range players {
 			/*if _, ok := playersToBeRemoved[con.Name][player.SteamID]; ok {

@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,6 +17,7 @@ var (
 	playerRegex      = regexp.MustCompile(`(?m)^#[ ]+([0-9]+)[ ]+"([^"]*)"[ ]+(STEAM_[0-1]:[0-1]:[0-9]+)[ ]+[0-9:]+[ ]+([0-9]+)[ ]+([0-9]+)[ ]+([a-z]+)[ ]+(([0-9]{1,3}.){3}[0-9]{1,3}):([0-9]+)$`)
 )
 
+// ParseHostname
 func ParseHostname(input string) string {
 	result := hostnameRegex.FindStringSubmatch(input)
 	if len(result) > 1 {
@@ -25,6 +27,7 @@ func ParseHostname(input string) string {
 	}
 }
 
+// ParseVersion
 func ParseVersion(input string) string {
 	result := versionRegex.FindStringSubmatch(input)
 	if len(result) > 1 {
@@ -34,6 +37,7 @@ func ParseVersion(input string) string {
 	}
 }
 
+// ParseMap
 func ParseMap(input string) string {
 	result := mapRegex.FindStringSubmatch(input)
 	if len(result) > 1 {
@@ -43,50 +47,34 @@ func ParseMap(input string) string {
 	}
 }
 
-func ParsePlayerCount(input string) *models.PlayerCount {
+// ParsePlayerCount
+func ParsePlayerCount(input string) (*models.PlayerCount, error) {
 	result := playerCountRegex.FindStringSubmatch(input)
 	if len(result) > 2 {
-		current, err := strconv.Atoi(result[1])
-		if err != nil {
-			panic(err)
-		}
-		max, err := strconv.Atoi(result[2])
-		if err != nil {
-			panic(err)
-		}
+		current, _ := strconv.Atoi(result[1])
+		max, _ := strconv.Atoi(result[2])
 		return &models.PlayerCount{
 			Current: current,
 			Max:     max,
-		}
+		}, nil
 	} else {
-		return &models.PlayerCount{}
+		return nil, errors.New("No player count found in input.")
 	}
 }
 
-func ParsePlayers(input string) map[string]*models.Player {
+// ParsePlayers
+func ParsePlayers(input string) (map[string]*models.Player, error) {
 	input = strings.Replace(input, "\000", "", -1)
 	matches := playerRegex.FindAllStringSubmatch(input, -1)
-	players := make(map[string]*models.Player)
 	if len(matches) == 0 {
-		return players
+		return nil, errors.New("No matches found in input.")
 	}
+	players := make(map[string]*models.Player)
 	for _, m := range matches {
-		userID, err := strconv.Atoi(m[1])
-		if err != nil {
-			panic(err)
-		}
-		ping, err := strconv.Atoi(m[4])
-		if err != nil {
-			panic(err)
-		}
-		loss, err := strconv.Atoi(m[5])
-		if err != nil {
-			panic(err)
-		}
-		connPort, err := strconv.Atoi(m[9])
-		if err != nil {
-			panic(err)
-		}
+		userID, _ := strconv.Atoi(m[1])
+		ping, _ := strconv.Atoi(m[4])
+		loss, _ := strconv.Atoi(m[5])
+		connPort, _ := strconv.Atoi(m[9])
 		players[m[3]] = &models.Player{
 			Username: m[2],
 			UserID:   userID,
@@ -98,5 +86,5 @@ func ParsePlayers(input string) map[string]*models.Player {
 			ConnPort: connPort,
 		}
 	}
-	return players
+	return players, nil
 }
