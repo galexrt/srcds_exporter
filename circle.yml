@@ -11,12 +11,7 @@ dependencies:
     - go get github.com/mitchellh/gox
     - go get github.com/tcnksm/ghr
     - >
-      CGO_ENABLED=0 gox -output="${HOME}/output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose -ldflags "-X {{repoPath}}/version.Version=${VERSION} \
-        -X {{repoPath}}/version.Revision=${CIRCLE_SHA1} \
-        -X {{repoPath}}/version.Branch=${CIRCLE_BRANCH} \
-        -X {{repoPath}}/version.BuildUser=$(whoami)@$(hostname) \
-        -X {{repoPath}}/version.BuildDate=$(date)" \
-        github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+      CGO_ENABLED=0 gox -output="${HOME}/output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose -ldflags '-X {{repoPath}}/version.Version='${VERSION}' -X {{repoPath}}/version.Revision='${CIRCLE_SHA1}' -X {{repoPath}}/version.Branch='${CIRCLE_BRANCH}' -X {{repoPath}}/version.BuildUser='$(whoami)@$(hostname)' -X {{repoPath}}/version.BuildDate='$(date) github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
     - ghr -draft -replace -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} ${CIRCLE_BRANCH}-build "${HOME}/output"
 
 test:
