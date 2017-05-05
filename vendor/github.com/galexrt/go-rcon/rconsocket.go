@@ -45,7 +45,11 @@ func (s *rconSocket) receive() (_ []byte, err error) {
 	}()
 	buf := new(bytes.Buffer)
 	tr := io.TeeReader(s.conn, buf)
-	total := int(readLong(tr))
+	long, err := readLong(tr)
+	if err != nil {
+		return nil, err
+	}
+	total := int(long)
 	log.WithFields(logrus.Fields{
 		"total": total + 4,
 	}).Debug("steam: reading packet")
