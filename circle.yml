@@ -2,12 +2,12 @@ machine:
   environment:
     PATH: "/usr/local/go/bin:/usr/local/go_workspace/bin:~/.go_workspace/bin:${PATH}"
     GOPATH: "${HOME}/.go_workspace:/usr/local/go_workspace"
-    VERSION: "2.0.1"
+    VERSION: "1.0.0"
 
 dependencies:
   override:
     - mkdir -p ${HOME}/.go_workspace/src/github.com/${CIRCLE_PROJECT_USERNAME} ${HOME}/output
-    - ln -s ${HOME}/${CIRCLE_PROJECT_REPONAME} ${HOME}/.go_workspace/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+    - ln -sf ${HOME}/${CIRCLE_PROJECT_REPONAME} ${HOME}/.go_workspace/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
     - go get github.com/mitchellh/gox
     - go get github.com/tcnksm/ghr
     - >
