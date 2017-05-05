@@ -3,7 +3,6 @@ machine:
     PATH: "/usr/local/go/bin:/usr/local/go_workspace/bin:~/.go_workspace/bin:${PATH}"
     GOPATH: "${HOME}/.go_workspace:/usr/local/go_workspace"
     VERSION: "2.0.1"
-    CGO_ENABLED: "0"
 
 dependencies:
   override:
@@ -12,7 +11,7 @@ dependencies:
     - go get github.com/mitchellh/gox
     - go get github.com/tcnksm/ghr
     - >
-      gox -output="${HOME}/output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose -ldflags " \
+      CGO_ENABLED=0 gox -output="${HOME}/output/srcds_exporter_{{.OS}}_{{.Arch}}" -verbose -ldflags " \
         -X {{repoPath}}/version.Version=${VERSION} \
         -X {{repoPath}}/version.Revision=${CIRCLE_SHA1} \
         -X {{repoPath}}/version.Branch=${CIRCLE_BRANCH} \
