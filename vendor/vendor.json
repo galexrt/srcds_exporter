@@ -21,12 +21,6 @@
 			"revisionTime": "2017-05-05T08:13:42Z"
 		},
 		{
-			"checksumSHA1": "ydMTaGWAn0rvISGoM66b8wuLA3Y=",
-			"path": "github.com/galexrt/srcds_exporter",
-			"revision": "c9aff01f01bc3342b95221e5025100c6214f41be",
-			"revisionTime": "2017-05-05T08:14:03Z"
-		},
-		{
 			"checksumSHA1": "kBeNcaKk56FguvPSUCEaH6AxpRc=",
 			"path": "github.com/golang/protobuf/proto",
 			"revision": "18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8",
