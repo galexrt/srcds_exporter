@@ -15,16 +15,16 @@
 			"revisionTime": "2016-08-04T10:47:26Z"
 		},
 		{
-			"checksumSHA1": "x5asj312O5BJNkzS4NoFhEsLglo=",
+			"checksumSHA1": "2yPOeJISBIrelnlo0uwosiK0QkM=",
 			"path": "github.com/galexrt/go-rcon",
-			"revision": "d4d732ee40cf7e7355e9f79033eb1961c030c1eb",
-			"revisionTime": "2017-05-05T08:01:55Z"
+			"revision": "bdbb9dd8edf7601141a004156a808bf68cb0f817",
+			"revisionTime": "2017-05-05T08:13:42Z"
 		},
 		{
-			"checksumSHA1": "F7Vabqlixa92942/6IuL2NQXAw0=",
+			"checksumSHA1": "ydMTaGWAn0rvISGoM66b8wuLA3Y=",
 			"path": "github.com/galexrt/srcds_exporter",
-			"revision": "3f0af3c44442a18ce7e6017ae4b80a4bda6b1240",
-			"revisionTime": "2017-05-05T08:01:18Z"
+			"revision": "c9aff01f01bc3342b95221e5025100c6214f41be",
+			"revisionTime": "2017-05-05T08:14:03Z"
 		},
 		{
 			"checksumSHA1": "kBeNcaKk56FguvPSUCEaH6AxpRc=",
