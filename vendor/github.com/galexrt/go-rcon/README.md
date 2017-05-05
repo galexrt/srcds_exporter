@@ -1,6 +1,6 @@
-# go-steam
+# go-rcon
 
-**go-steam** is a Go library for querying Source servers.
+**go-rcon** is a Go library for querying Source RCON servers.
 
 ## Requirements
 
@@ -9,7 +9,13 @@
 ## Installation
 
 ```
-go get github.com/kidoman/go-steam
+go get github.com/galexrt/go-rcon
+```
+
+## Update
+
+```
+go get -u github.com/galexrt/go-rcon
 ```
 
 ## License

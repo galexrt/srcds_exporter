@@ -10,6 +10,7 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
+// DialFn connect to server using the options
 type DialFn func(network, address string) (net.Conn, error)
 
 // Server represents a Source engine game server.
@@ -21,9 +22,6 @@ type Server struct {
 	rconPassword string
 
 	timeout time.Duration
-
-	usock          *udpSocket
-	udpInitialized bool
 
 	rsock           *rconSocket
 	rconInitialized bool
@@ -64,17 +62,9 @@ func Connect(addr string, os ...*ConnectOptions) (_ *Server, err error) {
 			Timeout: 1 * time.Second,
 		}).Dial
 	}
-	if err := s.init(); err != nil {
-		return nil, err
-	}
 	if s.rconPassword == "" {
 		return s, nil
 	}
-	defer func() {
-		if err != nil {
-			s.usock.close()
-		}
-	}()
 	if err := s.initRCON(); err != nil {
 		return nil, err
 	}
@@ -83,20 +73,6 @@ func Connect(addr string, os ...*ConnectOptions) (_ *Server, err error) {
 
 func (s *Server) String() string {
 	return s.addr
-}
-
-func (s *Server) init() error {
-	if s.addr == "" {
-		return errors.New("steam: server needs a address")
-	}
-	var err error
-	if s.usock, err = newUDPSocket(s.dial, s.addr, s.timeout); err != nil {
-		log.WithFields(logrus.Fields{
-			"err": err,
-		}).Error("steam: could not open udp socket")
-		return err
-	}
-	return nil
 }
 
 func (s *Server) initRCON() (err error) {
@@ -145,7 +121,7 @@ func (s *Server) authenticate() error {
 		"data": data,
 	}).Debug("steam: received empty response")
 	var resp rconResponse
-	if err := resp.unmarshalBinary(data); err != nil {
+	if err = resp.unmarshalBinary(data); err != nil {
 		return err
 	}
 	if resp.typ != rrtRespValue || resp.id != req.id {
@@ -174,87 +150,6 @@ func (s *Server) Close() {
 	if s.rconInitialized {
 		s.rsock.close()
 	}
-	s.usock.close()
-}
-
-// Ping returns the RTT (round-trip time) to the server.
-func (s *Server) Ping() (time.Duration, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	req, _ := infoRequest{}.marshalBinary()
-	start := time.Now()
-	s.usock.send(req)
-	if _, err := s.usock.receive(); err != nil {
-		return 0, err
-	}
-	elapsed := time.Since(start)
-	return elapsed, nil
-}
-
-// Info retrieves server information.
-func (s *Server) Info() (*InfoResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	req, _ := infoRequest{}.marshalBinary()
-	if err := s.usock.send(req); err != nil {
-		return nil, err
-	}
-	log.Debug("receiving info response")
-	data, err := s.usock.receive()
-	if err != nil {
-		log.WithFields(logrus.Fields{
-			"err": err,
-		}).Error("could not receive info response")
-		return nil, err
-	}
-	log.WithFields(logrus.Fields{
-		"data": data,
-	}).Debug("received info response")
-	var res InfoResponse
-	if err := res.unmarshalBinary(data); err != nil {
-		log.WithFields(logrus.Fields{
-			"err": err,
-		}).Error("could not unmarshal info response")
-		return nil, err
-	}
-	return &res, nil
-}
-
-// PlayersInfo retrieves player information from the server.
-func (s *Server) PlayersInfo() (*PlayersInfoResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	// Send the challenge request
-	req, _ := playersInfoRequest{}.marshalBinary()
-	if err := s.usock.send(req); err != nil {
-		return nil, err
-	}
-	data, err := s.usock.receive()
-	if err != nil {
-		return nil, err
-	}
-	if isPlayersInfoChallengeResponse(data) {
-		// Parse the challenge response
-		var challangeRes playersInfoChallengeResponse
-		if err := challangeRes.unmarshalBinary(data); err != nil {
-			return nil, err
-		}
-		// Send a new request with the proper challenge number
-		req, _ = playersInfoRequest{challangeRes.Challenge}.marshalBinary()
-		if err := s.usock.send(req); err != nil {
-			return nil, err
-		}
-		data, err = s.usock.receive()
-		if err != nil {
-			return nil, err
-		}
-	}
-	// Parse the return value
-	var res PlayersInfoResponse
-	if err := res.unmarshalBinary(data); err != nil {
-		return nil, err
-	}
-	return &res, nil
 }
 
 // Send RCON command to the server.
@@ -295,7 +190,7 @@ func (s *Server) Send(cmd string) (string, error) {
 			return "", err
 		}
 		var resp rconResponse
-		if err := resp.unmarshalBinary(data); err != nil {
+		if err = resp.unmarshalBinary(data); err != nil {
 			log.WithFields(logrus.Fields{
 				"err": err,
 			}).Error("steam: decoding response")
