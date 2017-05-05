@@ -2,6 +2,8 @@
 
 **go-rcon** is a Go library for querying Source RCON servers.
 
+This is a fork of [github.com/kidoman/go-steam](https://github.com/kidoman/go-steam), but with the UDP related stuff removed.
+
 ## Requirements
 
 * Go 1.1 or above
