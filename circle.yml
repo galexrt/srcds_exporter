@@ -30,7 +30,7 @@ compile:
 
 deployment:
   release:
-    tag: /release\/[0-9]+(\.[0-9]+)*/
+    tag: /v[0-9]+(\.[0-9]+)*/
     owner: galexrt
     commands:
       - ghr -replace -u "${CIRCLE_PROJECT_USERNAME}" -r "${CIRCLE_PROJECT_REPONAME}" "${CIRCLE_TAG}" "${HOME}/${CIRCLE_PROJECT_REPONAME}/output"
