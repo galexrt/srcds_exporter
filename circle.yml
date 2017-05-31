@@ -25,7 +25,7 @@ compile:
       gox -output="${HOME}/output/${CIRCLE_PROJECT_REPONAME}_{{.OS}}_{{.Arch}}" -verbose -ldflags '-X {{repoPath}}/vendor/github.com/prometheus/common/version.Version='"${VERSION}"' -X {{repoPath}}/vendor/github.com/prometheus/common/version.Revision='"${CIRCLE_SHA1}"' -X {{repoPath}}/vendor/github.com/prometheus/common/version.Branch='"${CIRCLE_BRANCH}"' -X {{repoPath}}/vendor/github.com/prometheus/common/version.BuildUser='"${USER}@${HOSTNAME}"' -X {{repoPath}}/vendor/github.com/prometheus/common/version.BuildDate='"$(date +%Y%m%d-%H:%M:%S)"'' "github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
     - test ! -z "${CIRCLE_BRANCH}" && ghr -draft -replace -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} ${CIRCLE_BRANCH}-build "${HOME}/output"
     - docker info
-    - docker build --rm=false -t quay.io/${DOCKER_USER}/${CIRCLE_PROJECT_REPONAME} .
+    - docker build --rm=false -t quay.io/${DOCKER_USER}/${CIRCLE_PROJECT_REPONAME} "${HOME}"
 
 deployment:
   release:
