@@ -22,6 +22,12 @@
 			"revisionTime": "2017-01-30T11:31:45Z"
 		},
 		{
+			"checksumSHA1": "AI0j0jQz5L+w25R0bOrnK+Isc7U=",
+			"path": "github.com/galexrt/go-rcon",
+			"revision": "81c7e786f1e55c9650e4c598b634495ce2c9a525",
+			"revisionTime": "2017-05-31T09:50:17Z"
+		},
+		{
 			"checksumSHA1": "OVfqk5qyKVLHFirVbQOfxSkFBPo=",
 			"path": "github.com/golang/protobuf/proto",
 			"revision": "18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8",
