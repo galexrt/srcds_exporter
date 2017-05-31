@@ -1,8 +1,0 @@
----
-options:
-  rcontimeout: 2s
-  cachetimeout: 15s
-servers:
-  modern_roleplay:
-    address: 89.163.172.250:27015
-    rconpassword: 9ZAYGOGxRlMHxfMtkfUC
