@@ -4,6 +4,7 @@ machine:
     GOPATH: "${HOME}/.go_workspace:/usr/local/go"
     VERSION: "1.0.0"
     DOCKER_USER: "galexrt"
+    DOCKER_EMAIL: "galexrt@googlemail.com"
   services:
     - docker
 
@@ -33,7 +34,7 @@ deployment:
     owner: galexrt
     commands:
       - ghr -replace -u "${CIRCLE_PROJECT_USERNAME}" -r "${CIRCLE_PROJECT_REPONAME}" "${CIRCLE_TAG}" "${HOME}/${CIRCLE_PROJECT_REPONAME}/output"
-      - docker login -u $DOCKER_USER -p $DOCKER_PASS quay.io
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
       - docker tag quay.io/${DOCKER_USER}/${CIRCLE_PROJECT_REPONAME} quay.io/${DOCKER_USER}/${CIRCLE_PROJECT_REPONAME}:"${CIRCLE_TAG}"
       - docker push quay.io/${DOCKER_USER}/${CIRCLE_PROJECT_REPONAME}:"${CIRCLE_TAG}"
       - docker push quay.io/${DOCKER_USER}/${CIRCLE_PROJECT_REPONAME}
