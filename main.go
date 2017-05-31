@@ -16,7 +16,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/Sirupsen/logrus"
-	steam "github.com/galexrt/go-steam"
+	rcon "github.com/galexrt/go-rcon"
 	"github.com/galexrt/srcds_exporter/collector"
 	"github.com/galexrt/srcds_exporter/connector"
 	"github.com/prometheus/client_golang/prometheus"
@@ -246,7 +246,7 @@ func main() {
 	if debugMode {
 		log.Level = logrus.DebugLevel
 	}
-	steam.SetLog(log)
+	rcon.SetLog(log)
 	log.Infoln("Starting srcds_exporter", version.Info())
 	log.Infoln("Build context", version.BuildContext())
 

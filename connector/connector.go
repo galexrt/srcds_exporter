@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	steam "github.com/galexrt/go-steam"
+	rcon "github.com/galexrt/go-rcon"
 	cache "github.com/patrickmn/go-cache"
 )
 
@@ -30,8 +30,8 @@ func (cn *Connector) NewConnection(name string, opts *ConnectionOptions) error {
 	if _, ok := cn.connections[opts.Addr]; ok {
 		return nil
 	}
-	con, err := steam.Connect(opts.Addr,
-		&steam.ConnectOptions{
+	con, err := rcon.Connect(opts.Addr,
+		&rcon.ConnectOptions{
 			RCONPassword: opts.RconPassword,
 			Timeout:      opts.ConnectTimeout,
 		})

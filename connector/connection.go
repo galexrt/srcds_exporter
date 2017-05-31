@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	steam "github.com/galexrt/go-steam"
+	rcon "github.com/galexrt/go-rcon"
 	cache "github.com/patrickmn/go-cache"
 )
 
@@ -19,7 +19,7 @@ type ConnectionOptions struct {
 type Connection struct {
 	Name    string
 	cmu     sync.Mutex
-	con     *steam.Server
+	con     *rcon.Server
 	mu      sync.Mutex
 	cache   cache.Cache
 	opts    map[string]string
@@ -27,7 +27,7 @@ type Connection struct {
 }
 
 func (c *Connection) reconnect() error {
-	con, err := steam.Connect(c.opts["Address"], &steam.ConnectOptions{
+	con, err := rcon.Connect(c.opts["Address"], &rcon.ConnectOptions{
 		RCONPassword: c.opts["RCONPassword"],
 		Timeout:      c.opts["Timeout"],
 	})
