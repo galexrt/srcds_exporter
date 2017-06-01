@@ -33,7 +33,7 @@ deployment:
     tag: /v[0-9]+(\.[0-9]+)*/
     owner: galexrt
     commands:
-      - ghr -replace -u "${CIRCLE_PROJECT_USERNAME}" -r "${CIRCLE_PROJECT_REPONAME}" "${CIRCLE_TAG}" "${HOME}/${CIRCLE_PROJECT_REPONAME}/output"
+      - ghr -replace -u "${CIRCLE_PROJECT_USERNAME}" -r "${CIRCLE_PROJECT_REPONAME}" -b "<ul>$(git log master...${VERSION} --pretty=format:'<li> <a href="http://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/commit/%H">view commit &bull;</a> %s</li> ' --reverse)</ul>" "${CIRCLE_TAG}" "${HOME}/${CIRCLE_PROJECT_REPONAME}/output"
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
       - docker tag quay.io/${DOCKER_USER}/${CIRCLE_PROJECT_REPONAME} quay.io/${DOCKER_USER}/${CIRCLE_PROJECT_REPONAME}:"${CIRCLE_TAG}"
       - docker push quay.io/${DOCKER_USER}/${CIRCLE_PROJECT_REPONAME}:"${CIRCLE_TAG}"
