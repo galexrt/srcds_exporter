@@ -3,6 +3,14 @@ SRCDS Gameserver Prometheus exporter.
 
 [![CircleCI branch](https://img.shields.io/circleci/project/github/RedSparr0w/node-csgo-parser/master.svg)]() [![Docker Repository on Quay](https://quay.io/repository/galexrt/srcds_exporter/status "Docker Repository on Quay")](https://quay.io/repository/galexrt/srcds_exporter) [![Go Report Card](https://goreportcard.com/badge/github.com/galexrt/srcds_exporter)](https://goreportcard.com/report/github.com/galexrt/srcds_exporter) [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 
+## Compatibility
+
+### Tested Games
+* [Garry's Mod](https://store.steampowered.com/app/4000/Garrys_Mod/)
+
+It may work with newer Source Engine games like [Counter-Strike: Global Offensive](http://store.steampowered.com/app/730/CounterStrike_Global_Offensive/) too.
+If you have any issues with a game, please let me know by creating an issue containing the rcon output of `status` command and I'll be glad to fix it.
+
 ## Collectors
 Whick collectors are enabled is controlled by the `--collectors.enabled` flag.
 
