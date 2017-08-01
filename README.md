@@ -24,4 +24,4 @@ To get a list of a list of all flags, use the `--help` flag.
 
 ## Docker Image
 The Docker image is available from [Quay.io](https://quay.io):
-* `quay.io/galexrt/srcds_exporter:1.0.0`
+* `quay.io/galexrt/srcds_exporter:v1.0.1`

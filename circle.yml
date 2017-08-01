@@ -2,7 +2,7 @@ machine:
   environment:
     PATH: "/usr/local/go/bin:/usr/local/go/bin:~/.go_workspace/bin:${PATH}"
     GOPATH: "${HOME}/.go_workspace:/usr/local/go"
-    VERSION: "1.0.0"
+    VERSION: "1.0.1"
     DOCKER_USER: "galexrt"
     DOCKER_EMAIL: "galexrt@googlemail.com"
   services:
