@@ -1,7 +1,6 @@
 FROM quay.io/prometheus/busybox:latest
+LABEL maintainer="Alexander Trost <galexrt@googlemail.com>"
 
-ENV ARCH="linux_amd64"
-
-ADD output/srcds_exporter_$ARCH /bin/srcds_exporter
+ADD .build/linux-amd64/srcds_exporter /bin/srcds_exporter
 
 ENTRYPOINT ["/bin/srcds_exporter"]
