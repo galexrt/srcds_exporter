@@ -108,7 +108,7 @@ func init() {
 	flag.StringVar(&metricsAddr, "web.listen-address", ":9137", "The address to listen on for HTTP requests")
 	flag.StringVar(&metricsPath, "web.telemetry-path", "/metrics", "Path the metrics will be exposed under")
 	flag.StringVar(&enabledCollectors, "collectors.enabled", defaultCollectors, "Comma separated list of active collectors")
-	flag.StringVar(&configFile, "config.file", "./srcds.yml", "Config file to use.")
+	flag.StringVar(&configFile, "config.file", "./srcds.yaml", "Config file to use.")
 }
 
 func (cc *CurrentConfig) reloadConfig(confFile string) (err error) {

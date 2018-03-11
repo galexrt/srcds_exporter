@@ -24,3 +24,4 @@ _testmain.go
 *.prof
 
 /srcds.yml
+/srcds.yaml
