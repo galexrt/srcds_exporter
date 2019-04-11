@@ -13,7 +13,7 @@ var (
 	hostnameRegex    = regexp.MustCompile(`(?m)^hostname[ ]*: (.*)$`)
 	versionRegex     = regexp.MustCompile(`(?m)^version[ ]*: (.*)$`)
 	mapRegex         = regexp.MustCompile(`(?m)^map[ ]*: ([a-zA-Z_0-9-]+) .*$`)
-	playerCountRegex = regexp.MustCompile(`(?m)^players[ ]*: ([0-9]+) \(([0-9]+) max\)$`)
+	playerCountRegex = regexp.MustCompile(`(?m)^players[ ]*:[ ]*(([0-9]+)[ ]*\(([0-9]+)[ ]*max\)|.*\(([0-9]+)\/([0-9]+) max\)).*$`)
 	playerRegex      = regexp.MustCompile(`(?m)^#[ ]+([0-9]+)[ ]+"([^"]*)"[ ]+(STEAM_[0-1]:[0-1]:[0-9]+)[ ]+[0-9:]+[ ]+([0-9]+)[ ]+([0-9]+)[ ]+([a-z]+)[ ]+(([0-9]{1,3}.){3}[0-9]{1,3}):([0-9]+)$`)
 )
 
@@ -50,9 +50,27 @@ func ParseMap(input string) string {
 // ParsePlayerCount
 func ParsePlayerCount(input string) (*models.PlayerCount, error) {
 	result := playerCountRegex.FindStringSubmatch(input)
-	if len(result) > 2 {
-		current, _ := strconv.Atoi(result[1])
-		max, _ := strconv.Atoi(result[2])
+	if len(result) > 0 {
+		var currentRaw string
+		if result[2] != "" {
+			currentRaw = result[2]
+		} else if result[4] != "" {
+			currentRaw = result[4]
+		} else {
+			currentRaw = "0"
+		}
+
+		var currentMax string
+		if result[3] != "" {
+			currentMax = result[3]
+		} else if result[5] != "" {
+			currentMax = result[5]
+		} else {
+			currentMax = "0"
+		}
+
+		current, _ := strconv.Atoi(currentRaw)
+		max, _ := strconv.Atoi(currentMax)
 		return &models.PlayerCount{
 			Current: current,
 			Max:     max,

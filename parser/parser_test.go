@@ -95,6 +95,13 @@ var parsePlayerCountTests = []struct {
 		`nope: nope`,
 		nil,
 	},
+	{
+		`players : 2 humans, 2 bots (26/0 max) (not hibernating)`,
+		&models.PlayerCount{
+			Current: 26,
+			Max:     0,
+		},
+	},
 }
 
 func TestParsePlayerCount(t *testing.T) {
