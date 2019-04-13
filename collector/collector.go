@@ -5,6 +5,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// Namespace metric namespace name
 const Namespace = "srcds"
 
 // Factories contains the list of all available collectors.

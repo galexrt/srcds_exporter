@@ -89,6 +89,8 @@ var parsePlayerCountTests = []struct {
 		&models.PlayerCount{
 			Current: 1,
 			Max:     64,
+			Humans:  -1,
+			Bots:    -1,
 		},
 	},
 	{
@@ -98,8 +100,10 @@ var parsePlayerCountTests = []struct {
 	{
 		`players : 2 humans, 2 bots (26/0 max) (not hibernating)`,
 		&models.PlayerCount{
-			Current: 26,
-			Max:     0,
+			Current: 4,
+			Max:     26,
+			Humans:  2,
+			Bots:    2,
 		},
 	},
 }

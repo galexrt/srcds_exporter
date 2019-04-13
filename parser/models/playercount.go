@@ -4,4 +4,6 @@ package models
 type PlayerCount struct {
 	Current int
 	Max     int
+	Humans  int
+	Bots    int
 }

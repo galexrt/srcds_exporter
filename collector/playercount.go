@@ -48,9 +48,10 @@ func (c *playerCountCollector) Update(ch chan<- prometheus.Metric) error {
 		if err != nil {
 			return err
 		}
+
 		current := prometheus.NewDesc(
 			prometheus.BuildFQName(Namespace, "playercount", "current"),
-			"The current map on the server.",
+			"The current count players on the server.",
 			nil, prometheus.Labels{
 				"server": con.Name,
 			})
@@ -64,6 +65,28 @@ func (c *playerCountCollector) Update(ch chan<- prometheus.Metric) error {
 			current, prometheus.GaugeValue, float64(playerCount.Current))
 		ch <- prometheus.MustNewConstMetric(
 			limit, prometheus.GaugeValue, float64(playerCount.Max))
+
+		if playerCount.Humans != -1 {
+			humans := prometheus.NewDesc(
+				prometheus.BuildFQName(Namespace, "playercount", "humans"),
+				"The current count of humans players on the server.",
+				nil, prometheus.Labels{
+					"server": con.Name,
+				})
+			ch <- prometheus.MustNewConstMetric(
+				humans, prometheus.GaugeValue, float64(playerCount.Humans))
+		}
+
+		if playerCount.Bots != -1 {
+			bots := prometheus.NewDesc(
+				prometheus.BuildFQName(Namespace, "playercount", "bots"),
+				"The current count of bot players on the server.",
+				nil, prometheus.Labels{
+					"server": con.Name,
+				})
+			ch <- prometheus.MustNewConstMetric(
+				bots, prometheus.GaugeValue, float64(playerCount.Bots))
+		}
 	}
 	return nil
 }
