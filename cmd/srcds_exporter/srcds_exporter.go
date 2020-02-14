@@ -15,7 +15,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	rcon "github.com/galexrt/go-rcon"
 	"github.com/galexrt/srcds_exporter/collector"
 	"github.com/galexrt/srcds_exporter/connector"

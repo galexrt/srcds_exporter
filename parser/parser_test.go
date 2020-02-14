@@ -1,10 +1,10 @@
 package parser
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/galexrt/srcds_exporter/parser/models"
+	"github.com/stretchr/testify/assert"
 )
 
 var parseHostnameTests = []struct {
@@ -28,9 +28,7 @@ var parseHostnameTests = []struct {
 func TestParseHostname(t *testing.T) {
 	for _, tt := range parseHostnameTests {
 		actual := ParseHostname(tt.request)
-		if actual != tt.expected {
-			t.Errorf("parseHostname(%s): expected %s, actual %s", tt.request, tt.expected, actual)
-		}
+		assert.Equal(t, tt.expected, actual)
 	}
 }
 
@@ -51,9 +49,7 @@ var parseVersionTests = []struct {
 func TestParseVersion(t *testing.T) {
 	for _, tt := range parseVersionTests {
 		actual := ParseVersion(tt.request)
-		if actual != tt.expected {
-			t.Errorf("parseVersion(%s): expected %s, actual %s", tt.request, tt.expected, actual)
-		}
+		assert.Equal(t, tt.expected, actual)
 	}
 }
 
@@ -74,15 +70,14 @@ var parseMapTests = []struct {
 func TestParseMap(t *testing.T) {
 	for _, tt := range parseMapTests {
 		actual := ParseMap(tt.request)
-		if actual != tt.expected {
-			t.Errorf("parseMap(%s): expected %s, actual %s", tt.request, tt.expected, actual)
-		}
+		assert.Equal(t, tt.expected, actual)
 	}
 }
 
 var parsePlayerCountTests = []struct {
 	request  string
 	expected *models.PlayerCount
+	errOkay  bool
 }{
 	{
 		`players : 1 (64 max)`,
@@ -92,10 +87,12 @@ var parsePlayerCountTests = []struct {
 			Humans:  -1,
 			Bots:    -1,
 		},
+		false,
 	},
 	{
 		`nope: nope`,
 		nil,
+		true,
 	},
 	{
 		`players : 2 humans, 2 bots (26/0 max) (not hibernating)`,
@@ -105,21 +102,36 @@ var parsePlayerCountTests = []struct {
 			Humans:  2,
 			Bots:    2,
 		},
+		false,
+	},
+	{
+		`players : 2 humans, 2 bots (4 max)`,
+		&models.PlayerCount{
+			Current: 4,
+			Max:     4,
+			Humans:  2,
+			Bots:    2,
+		},
+		false,
 	},
 }
 
 func TestParsePlayerCount(t *testing.T) {
 	for _, tt := range parsePlayerCountTests {
-		actual, _ := ParsePlayerCount(tt.request)
-		if !reflect.DeepEqual(actual, tt.expected) {
-			t.Errorf("ParsePlayerCount(%s): expected %v, actual %v", tt.request, tt.expected, actual)
+		actual, err := ParsePlayerCount(tt.request)
+		if tt.errOkay {
+			assert.Error(t, err)
+		} else {
+			assert.NoError(t, err)
 		}
+		assert.Equal(t, tt.expected, actual)
 	}
 }
 
 var parsePlayersTests = []struct {
 	request  string
 	expected map[string]*models.Player
+	errOkay  bool
 }{
 	{
 		`#    218 "TestUser1"      STEAM_0:0:1015738 07:36       65    0 active 10.10.220.12:27005`,
@@ -135,18 +147,55 @@ var parsePlayersTests = []struct {
 				ConnPort: 27005,
 			},
 		},
+		false,
 	},
 	{
 		`NOPE`,
 		nil,
+		true,
+	},
+	{
+		`#    5 "TestUser2"      [U:1:1234567]      00:11       74    0 active 192.168.1.5:27005`,
+		map[string]*models.Player{
+			"[U:1:1234567]": &models.Player{
+				Username: "TestUser2",
+				SteamID:  "[U:1:1234567]",
+				UserID:   5,
+				Ping:     74,
+				Loss:     0,
+				State:    "active",
+				IP:       "192.168.1.5",
+				ConnPort: 27005,
+			},
+		},
+		false,
+	},
+	{
+		`#    5 "TestUser2"      [U:1:1234567]      00:11       74    0 active`,
+		map[string]*models.Player{
+			"[U:1:1234567]": &models.Player{
+				Username: "TestUser2",
+				SteamID:  "[U:1:1234567]",
+				UserID:   5,
+				Ping:     74,
+				Loss:     0,
+				State:    "active",
+				IP:       "",
+				ConnPort: 0,
+			},
+		},
+		false,
 	},
 }
 
 func TestParsePlayers(t *testing.T) {
 	for _, tt := range parsePlayersTests {
-		actual, _ := ParsePlayers(tt.request)
-		if !reflect.DeepEqual(actual, tt.expected) {
-			t.Errorf("parsePlayers(%s): expected %v, actual %v", tt.request, tt.expected, actual)
+		actual, err := ParsePlayers(tt.request)
+		if tt.errOkay {
+			assert.Error(t, err)
+		} else {
+			assert.NoError(t, err)
 		}
+		assert.Equal(t, tt.expected, actual)
 	}
 }

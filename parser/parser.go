@@ -10,44 +10,41 @@ import (
 )
 
 var (
-	hostnameRegex    = regexp.MustCompile(`(?m)^hostname[ ]*: (.*)$`)
-	versionRegex     = regexp.MustCompile(`(?m)^version[ ]*: (.*)$`)
-	mapRegex         = regexp.MustCompile(`(?m)^map[ ]*: ([a-zA-Z_0-9-]+) .*$`)
-	playerCountRegex = regexp.MustCompile(`(?m)^players[ ]*:[ ]*((?P<current1>[0-9]+)[ ]*\((?P<max1>[0-9]+)[ ]*max\)|(?P<humans>[0-9]+) humans,[ ]+(?P<bots>[0-9]+) bots[ ]+\((?P<max2>[0-9]+)/[0-9]+[ ]+max\)).*$`)
-	playerRegex      = regexp.MustCompile(`(?m)^#[ ]+([0-9]+)[ ]+"([^"]*)"[ ]+(STEAM_[0-1]:[0-1]:[0-9]+)[ ]+[0-9:]+[ ]+([0-9]+)[ ]+([0-9]+)[ ]+([a-z]+)[ ]+(([0-9]{1,3}.){3}[0-9]{1,3}):([0-9]+)$`)
+	hostnameRegex    = regexp.MustCompile(`(?m)^hostname\s*: (.*)$`)
+	versionRegex     = regexp.MustCompile(`(?m)^version\s*: (.*)$`)
+	mapRegex         = regexp.MustCompile(`(?m)^map\s*: ([a-zA-Z_0-9-]+) .*$`)
+	playerCountRegex = regexp.MustCompile(`(?m)^players\s*:\s*((?P<current1>[0-9]+)\s*\((?P<max1>[0-9]+)\s*max\)|(?P<humans>[0-9]+) humans,\s+(?P<bots>[0-9]+) bots\s+\((?P<max2>[0-9]+)(/[0-9]+)?\s+max\)).*$`)
+	playerRegex      = regexp.MustCompile(`(?m)^#\s+([0-9]+)\s+"([^"]*)"\s+(\S+)\s+[0-9:]+\s+([0-9]+)\s+([0-9]+)\s+([a-z]+)(\s+(([0-9]{1,3}.){3}[0-9]{1,3}):([0-9]+))?$`)
 )
 
-// ParseHostname
+// ParseHostname parse SRCDS `status` command to retrieve server hostname
 func ParseHostname(input string) string {
 	result := hostnameRegex.FindStringSubmatch(input)
 	if len(result) > 1 {
 		return result[1]
-	} else {
-		return ""
 	}
+	return ""
 }
 
-// ParseVersion
+// ParseVersion parse SRCDS `status` command to retrieve server version
 func ParseVersion(input string) string {
 	result := versionRegex.FindStringSubmatch(input)
 	if len(result) > 1 {
 		return result[1]
-	} else {
-		return ""
 	}
+	return ""
 }
 
-// ParseMap
+// ParseMap parse SRCDS `status` command to retrieve server map
 func ParseMap(input string) string {
 	result := mapRegex.FindStringSubmatch(input)
 	if len(result) > 1 {
 		return result[1]
-	} else {
-		return ""
 	}
+	return ""
 }
 
-// ParsePlayerCount
+// ParsePlayerCount parse SRCDS `status` command to retrieve player count
 func ParsePlayerCount(input string) (*models.PlayerCount, error) {
 	match := playerCountRegex.FindStringSubmatch(input)
 
@@ -100,12 +97,11 @@ func ParsePlayerCount(input string) (*models.PlayerCount, error) {
 			Humans:  humans,
 			Bots:    bots,
 		}, nil
-	} else {
-		return nil, errors.New("no player count found in input")
 	}
+	return nil, errors.New("no player count found in input")
 }
 
-// ParsePlayers
+// ParsePlayers parse SRCDS `status` command to retrieve players on server
 func ParsePlayers(input string) (map[string]*models.Player, error) {
 	input = strings.Replace(input, "\000", "", -1)
 	matches := playerRegex.FindAllStringSubmatch(input, -1)
@@ -117,7 +113,7 @@ func ParsePlayers(input string) (map[string]*models.Player, error) {
 		userID, _ := strconv.Atoi(m[1])
 		ping, _ := strconv.Atoi(m[4])
 		loss, _ := strconv.Atoi(m[5])
-		connPort, _ := strconv.Atoi(m[9])
+		connPort, _ := strconv.Atoi(m[10])
 		players[m[3]] = &models.Player{
 			Username: m[2],
 			UserID:   userID,
@@ -125,7 +121,7 @@ func ParsePlayers(input string) (map[string]*models.Player, error) {
 			State:    m[6],
 			Ping:     ping,
 			Loss:     loss,
-			IP:       m[7],
+			IP:       m[8],
 			ConnPort: connPort,
 		}
 	}
