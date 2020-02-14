@@ -20,22 +20,17 @@ jobs:
       DOCKER_TEST_IMAGE_NAME: quay.io/prometheus/golang-builder:1.10-base
       REPO_PATH: github.com/galexrt/srcds_exporter
     docker:
-    - image: circleci/golang:1.10
+    - image: circleci/golang:1.13
     steps:
     - run: |
         sudo chown circleci:circleci -R /go
-    - restore_cache:
-        keys:
-        - v2-dep-{{ .Branch }}-
-        - v2-dep-master-
-        - v2-dep-
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     - run:
         name: Install Docker client and github-release, and set PATH
         command: |
           set -x
-          VER="18.09.5"
+          VER="19.03.5"
           curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
           tar -xz -C /tmp -f /tmp/docker-$VER.tgz
           sudo mv /tmp/docker/* /usr/bin
@@ -43,7 +38,7 @@ jobs:
           echo -e "export PATH=$PATH:/usr/local/go/bin:/go/bin" >> $BASH_ENV
     - run: make promu
     - setup_remote_docker:
-        docker_layer_caching: true
+        docker_layer_caching: false
     - run: docker info
     - run:
         name: Copy data files
@@ -73,10 +68,6 @@ jobs:
               make docker DOCKER_IMAGE_NAME=$QUAY_IMAGE_NAME
           fi
           docker images
-    - save_cache:
-        key: v2-dep-{{ .Branch }}-{{ epoch }}
-        paths:
-        - /go/src
     - run:
         name: docker login to Docker Hub and Quay.io
         command: |
