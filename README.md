@@ -1,4 +1,5 @@
 # srcds_exporter
+
 SRCDS Gameserver Prometheus exporter.
 
 [![CircleCI branch](https://img.shields.io/circleci/project/github/RedSparr0w/node-csgo-parser/master.svg)]() [![Docker Repository on Quay](https://quay.io/repository/galexrt/srcds_exporter/status "Docker Repository on Quay")](https://quay.io/repository/galexrt/srcds_exporter) [![Go Report Card](https://goreportcard.com/badge/github.com/galexrt/srcds_exporter)](https://goreportcard.com/report/github.com/galexrt/srcds_exporter) [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
@@ -68,4 +69,4 @@ srcds_exporter [FLAGS]
 
 The Docker image is available from [Quay.io](https://quay.io):
 
-* `quay.io/galexrt/srcds_exporter:v1.2.0`
+* `quay.io/galexrt/srcds_exporter:v1.2.1`
