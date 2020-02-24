@@ -69,4 +69,5 @@ srcds_exporter [FLAGS]
 
 The Docker image is available from [Quay.io](https://quay.io):
 
-* `quay.io/galexrt/srcds_exporter:v1.2.5`
+* `quay.io/galexrt/srcds_exporter:master`
+* `quay.io/galexrt/srcds_exporter:TAG`
