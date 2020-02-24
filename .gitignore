@@ -26,3 +26,5 @@ _testmain.go
 /srcds.yml
 /srcds.yaml
 /srcds_exporter
+/.tarballs/
+/.build/
