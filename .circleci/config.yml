@@ -17,13 +17,19 @@ jobs:
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
       DOCKER_IMAGE_NAME: galexrt/srcds_exporter
       QUAY_IMAGE_NAME: quay.io/galexrt/srcds_exporter
-      DOCKER_TEST_IMAGE_NAME: quay.io/prometheus/golang-builder:1.10-base
+      DOCKER_TEST_IMAGE_NAME: quay.io/prometheus/golang-builder:1.13-base
       REPO_PATH: github.com/galexrt/srcds_exporter
     docker:
     - image: circleci/golang:1.13
     steps:
     - run: |
         sudo chown circleci:circleci -R /go
+    - restore_cache:
+        keys:
+        - v2-dep-{{ .Branch }}-
+        - v2-dep-master-
+        - v2-dep-
+    - run: rm -rf /go/src/github.com/galexrt/srcds_exporter
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     - run:
@@ -34,7 +40,7 @@ jobs:
           curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
           tar -xz -C /tmp -f /tmp/docker-$VER.tgz
           sudo mv /tmp/docker/* /usr/bin
-          sudo curl -L 'https://github.com/aktau/github-release/releases/download/v0.7.2/linux-amd64-github-release.tar.bz2' | sudo tar xvjf - --strip-components 3 -C /usr/local/bin
+          sudo curl -L 'https://github.com/meterup/github-release/releases/download/v0.7.5/linux-amd64-github-release.bz2' | sudo tar xvjf - -C /usr/local/bin
           echo -e "export PATH=$PATH:/usr/local/go/bin:/go/bin" >> $BASH_ENV
     - run: make promu
     - setup_remote_docker:
@@ -63,11 +69,23 @@ jobs:
               promu checksum .tarballs
               promu release .tarballs
               mkdir $CIRCLE_ARTIFACTS/releases/ && cp -a .tarballs/* $CIRCLE_ARTIFACTS/releases/
+              for file in .tarballs/*; do
+                  github-release release \
+                    --repo "$CIRCLE_PROJECT_REPONAME" \
+                    --tag "$CIRCLE_TAG" \
+                    --name "Release $CIRCLE_TAG" \
+                    --description "Automatic release through git tag." \
+                    --file "$file"
+              done
           else
               make docker DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME
               make docker DOCKER_IMAGE_NAME=$QUAY_IMAGE_NAME
           fi
           docker images
+    - save_cache:
+        key: v2-dep-{{ .Branch }}-{{ epoch }}
+        paths:
+        - /go/src
     - run:
         name: docker login to Docker Hub and Quay.io
         command: |
