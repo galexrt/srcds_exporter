@@ -87,31 +87,31 @@ var (
 	connections *connector.Connector
 )
 
-// CurrentConfig
+// CurrentConfig current config with a mutex
 type CurrentConfig struct {
 	sync.RWMutex
 	C *Config
 }
 
-// Config
+// Config Config file structure
 type Config struct {
 	Options Options           `yaml:"options"`
 	Servers map[string]Server `yaml:"servers"`
 }
 
-// Options
+// Options Options structure
 type Options struct {
 	RconTimeout  string `yaml:"rcontimeout"`
 	CacheTimeout string `yaml:"cachetimeout"`
 }
 
-// Server
+// Server Server structure
 type Server struct {
 	Address      string `yaml:"address"`
 	RconPassword string `yaml:"rconpassword"`
 }
 
-// SRCDSCollector
+// SRCDSCollector SRCDS Collector map structure
 type SRCDSCollector struct {
 	collectors map[string]collector.Collector
 }
