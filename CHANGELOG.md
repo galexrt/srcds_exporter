@@ -1,3 +1,7 @@
+## 1.2.8 / 2020-06-07
+
+* [ENHANCEMENT] ci: use GitHub Actions + promu
+
 ## v1.2.7 / 2020-06-07
 
 * [ENHANCEMENT] ci: use GitHub Actions + promu
