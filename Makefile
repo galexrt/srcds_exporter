@@ -3,29 +3,55 @@ DESCRIPTION ?= srcds_exporter - Expose metrics such as player count, current map
 MAINTAINER  ?= Alexander Trost <galexrt@googlemail.com>
 HOMEPAGE    ?= https://github.com/galexrt/srcds_exporter
 
-GO           := go
+GO111MODULE  ?= on
+GO           ?= go
+PROMU        ?= promu
 FPM          ?= fpm
-PROMU        := $(GOPATH)/bin/promu
-PREFIX       ?= $(shell pwd)
-BIN_DIR      ?= $(PREFIX)/.build
-TARBALL_DIR  ?= $(PREFIX)/.tarball
-PACKAGE_DIR  ?= $(PREFIX)/.package
+CWD          ?= $(shell pwd)
+BIN_DIR      ?= $(CWD)/.bin
+TARBALL_DIR  ?= $(CWD)/.tarball
+PACKAGE_DIR  ?= $(CWD)/.package
 ARCH         ?= amd64
 PACKAGE_ARCH ?= linux-amd64
-VERSION      ?= $(shell cat VERSION)
+
+# The GOHOSTARM and PROMU parts have been taken from the prometheus/promu repository
+# which is licensed under Apache License 2.0 Copyright 2018 The Prometheus Authors
+FIRST_GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
+
+GOHOSTOS     ?= $(shell $(GO) env GOHOSTOS)
+GOHOSTARCH   ?= $(shell $(GO) env GOHOSTARCH)
+
+ifeq (arm, $(GOHOSTARCH))
+	GOHOSTARM ?= $(shell GOARM= $(GO) env GOARM)
+	GO_BUILD_PLATFORM ?= $(GOHOSTOS)-$(GOHOSTARCH)v$(GOHOSTARM)
+else
+	GO_BUILD_PLATFORM ?= $(GOHOSTOS)-$(GOHOSTARCH)
+endif
+
+PROMU_VERSION ?= 0.5.0
+PROMU_URL     := https://github.com/prometheus/promu/releases/download/v$(PROMU_VERSION)/promu-$(PROMU_VERSION).$(GO_BUILD_PLATFORM).tar.gz
+# END copied code
 
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 
-DOCKER_IMAGE_NAME ?= srcds_exporter
+DOCKER_IMAGE_NAME ?= template-go
 DOCKER_IMAGE_TAG  ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 
 all: format style vet test build
 
 build: promu
-	@$(PROMU) build --prefix $(PREFIX)
+	@echo ">> building binaries"
+	GO111MODULE=$(GO111MODULE) $(PROMU) build --prefix $(PREFIX) $(PROMU_BINARIES)
 
-crossbuild: promu
-	@$(PROMU) crossbuild
+check_license:
+	@OUTPUT="$$(promu check licenses)"; \
+	if [[ $$OUTPUT ]]; then \
+		echo "Found go files without license header:"; \
+		echo "$$OUTPUT"; \
+		exit 1; \
+	else \
+		echo "All files with license header"; \
+	fi
 
 docker:
 	@echo ">> building docker image"
@@ -34,7 +60,6 @@ docker:
 format:
 	go fmt $(pkgs)
 
-.PHONY: package
 package-%: build
 	mkdir -p -m0755 $(PACKAGE_DIR)/usr/bin $(PACKAGE_DIR)/etc/sysconfig $(PACKAGE_DIR)/etc/srcds_exporter
 	mkdir -p $(PACKAGE_DIR)/etc/sysconfig
@@ -51,10 +76,11 @@ package-%: build
 	usr/ etc/
 
 promu:
-	@echo ">> fetching promu"
-	@GOOS="$(shell uname -s | tr A-Z a-z)" \
-	GOARCH="$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m)))" \
-	$(GO) get -u github.com/prometheus/promu
+	$(eval PROMU_TMP := $(shell mktemp -d))
+	curl -s -L $(PROMU_URL) | tar -xvzf - -C $(PROMU_TMP)
+	mkdir -p $(FIRST_GOPATH)/bin
+	cp $(PROMU_TMP)/promu-$(PROMU_VERSION).$(GO_BUILD_PLATFORM)/promu $(FIRST_GOPATH)/bin/promu
+	rm -r $(PROMU_TMP)
 
 style:
 	@echo ">> checking code style"
@@ -75,4 +101,4 @@ vet:
 	@echo ">> vetting code"
 	@$(GO) vet $(pkgs)
 
-.PHONY: all build crossbuild docker format promu style tarball test vet
+.PHONY: all build crossbuild docker format package promu style tarball test vet
