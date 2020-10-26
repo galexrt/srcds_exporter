@@ -34,7 +34,7 @@ PROMU_URL     := https://github.com/prometheus/promu/releases/download/v$(PROMU_
 
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
 
-DOCKER_IMAGE_NAME ?= template-go
+DOCKER_IMAGE_NAME ?= srcds_exporter
 DOCKER_IMAGE_TAG  ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 
 all: format style vet test build
