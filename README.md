@@ -2,7 +2,7 @@
 
 SRCDS Gameserver Prometheus exporter.
 
-[![CircleCI branch](https://img.shields.io/circleci/project/github/RedSparr0w/node-csgo-parser/master.svg)]() [![Docker Repository on Quay](https://quay.io/repository/galexrt/srcds_exporter/status "Docker Repository on Quay")](https://quay.io/repository/galexrt/srcds_exporter) [![Go Report Card](https://goreportcard.com/badge/github.com/galexrt/srcds_exporter)](https://goreportcard.com/report/github.com/galexrt/srcds_exporter) [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
+[![Docker Repository on Quay](https://quay.io/repository/galexrt/srcds_exporter/status "Docker Repository on Quay")](https://quay.io/repository/galexrt/srcds_exporter) [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 
 ## Compatibility
 
@@ -11,7 +11,7 @@ SRCDS Gameserver Prometheus exporter.
 * [Garry's Mod](https://store.steampowered.com/app/4000/Garrys_Mod/)
 * [Counter-Strike: Source](https://store.steampowered.com/app/240/CounterStrike_Source/)
 
-It may work with newer Source Engine games like [Counter-Strike: Global Offensive](http://store.steampowered.com/app/730/CounterStrike_Global_Offensive/) too, but hasn't been tested by the project team.
+It may work with newer Source Engine games like [Counter-Strike: Global Offensive](http://store.steampowered.com/app/730/CounterStrike_Global_Offensive/) too, but hasn't been tested too much by the project team.
 
 If you have any issues with a game, please create an issue containing the rcon output of `status` command and we'll look into it.
 
@@ -30,9 +30,9 @@ Whick collectors are enabled is controlled by the `--collectors.enabled` flag.
 
 ### Disabled by default
 
-| Name    | Description                                                 |
-| ------- | ----------------------------------------------------------- |
-| players | Report all players by with their Steam ID label as a metric |
+| Name    | Description                                                  |
+| ------- | ------------------------------------------------------------ |
+| players | Report all players by with their Steam ID label as a metric. |
 
 ## Usage
 
@@ -69,5 +69,4 @@ srcds_exporter [FLAGS]
 
 The Docker image is available from [Quay.io](https://quay.io):
 
-* `quay.io/galexrt/srcds_exporter:master`
 * `quay.io/galexrt/srcds_exporter:TAG`
