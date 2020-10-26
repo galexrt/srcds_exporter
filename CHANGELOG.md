@@ -1,4 +1,8 @@
-## 1.2.8 / 2020-06-07
+## 1.2.10 / 2020-10-26
+
+* [ENHANCEMENT] ci: fix changelog for new release
+
+## 1.2.9 / 2020-10-26
 
 * [ENHANCEMENT] ci: update to go 1.15
 
