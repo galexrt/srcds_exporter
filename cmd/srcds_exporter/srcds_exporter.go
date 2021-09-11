@@ -29,7 +29,7 @@ import (
 	"syscall"
 	"time"
 
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 
 	rcon "github.com/galexrt/go-rcon"
 	"github.com/galexrt/srcds_exporter/collector"

@@ -4,6 +4,15 @@ SRCDS Gameserver Prometheus exporter.
 
 [![Docker Repository on Quay](https://quay.io/repository/galexrt/srcds_exporter/status "Docker Repository on Quay")](https://quay.io/repository/galexrt/srcds_exporter) [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 
+Container Image available from:
+
+* [Quay.io](https://quay.io/repository/galexrt/srcds_exporter)
+* [GHCR.io](https://github.com/users/galexrt/packages/container/package/srcds_exporter)
+
+Container Image Tags:
+
+* `GIT_TAG` - Each Git tag is built and published.
+
 ## Compatibility
 
 ### Tested Games
@@ -64,9 +73,3 @@ srcds_exporter [FLAGS]
   -web.telemetry-path string
     	Path the metrics will be exposed under (default "/metrics")
 ```
-
-## Docker Image
-
-The Docker image is available from [Quay.io](https://quay.io):
-
-* `quay.io/galexrt/srcds_exporter:TAG`

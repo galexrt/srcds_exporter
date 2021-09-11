@@ -1,6 +1,10 @@
+## 1.2.12 / 2021-09-11
+
+* [ENHANCEMENT] ci: use go 1.16 for build
+
 ## 1.2.11 / 2021-01-06
 
-* [ENHANCEMENT] ci: use go 1.15 for build 
+* [ENHANCEMENT] ci: use go 1.15 for build
 
 ## 1.2.10 / 2020-10-26
 
