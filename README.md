@@ -1,8 +1,8 @@
 # srcds_exporter
 
-SRCDS Gameserver Prometheus exporter.
+![build_release](https://github.com/galexrt/srcds_exporter/workflows/build_release/badge.svg)
 
-[![Docker Repository on Quay](https://quay.io/repository/galexrt/srcds_exporter/status "Docker Repository on Quay")](https://quay.io/repository/galexrt/srcds_exporter) [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
+SRCDS Gameserver Prometheus exporter.
 
 Container Image available from:
 

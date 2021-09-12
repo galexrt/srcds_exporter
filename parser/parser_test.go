@@ -1,11 +1,11 @@
 /*
-Copyright 2020 Alexander Trost <galexrt@googlemail.com>
+Copyright 2021 Alexander Trost <galexrt@googlemail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -152,7 +152,7 @@ var parsePlayersTests = []struct {
 	{
 		`#    218 "TestUser1"      STEAM_0:0:1015738 07:36       65    0 active 10.10.220.12:27005`,
 		map[string]*models.Player{
-			"STEAM_0:0:1015738": &models.Player{
+			"STEAM_0:0:1015738": {
 				Username: "TestUser1",
 				SteamID:  "STEAM_0:0:1015738",
 				UserID:   218,
@@ -173,7 +173,7 @@ var parsePlayersTests = []struct {
 	{
 		`#    5 "TestUser2"      [U:1:1234567]      00:11       74    0 active 192.168.1.5:27005`,
 		map[string]*models.Player{
-			"[U:1:1234567]": &models.Player{
+			"[U:1:1234567]": {
 				Username: "TestUser2",
 				SteamID:  "[U:1:1234567]",
 				UserID:   5,
@@ -189,7 +189,7 @@ var parsePlayersTests = []struct {
 	{
 		`#    5 "TestUser2"      [U:1:1234567]      00:11       74    0 active`,
 		map[string]*models.Player{
-			"[U:1:1234567]": &models.Player{
+			"[U:1:1234567]": {
 				Username: "TestUser2",
 				SteamID:  "[U:1:1234567]",
 				UserID:   5,

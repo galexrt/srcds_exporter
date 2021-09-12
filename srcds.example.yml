@@ -1,11 +1,12 @@
 ---
 options:
-  rcontimeout: 60s
-  cachetimeout: 15s
+  connectTimeout: 60s
+  cacheExpiration: 15s
+  cacheCleanupInterval: 11s
 servers:
   example_server1:
     address: 127.0.0.1:27015
-    rconpassword: YOUR_RCON_PASSWORD
+    rconPassword: YOUR_RCON_PASSWORD
   example_server2:
     address: 127.0.0.1:27016
-    rconpassword: YOUR_RCON_PASSWORD
+    rconPassword: YOUR_RCON_PASSWORD

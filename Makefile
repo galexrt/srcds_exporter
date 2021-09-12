@@ -30,6 +30,8 @@ endif
 
 PROMU_VERSION ?= 0.7.0
 PROMU_URL     := https://github.com/prometheus/promu/releases/download/v$(PROMU_VERSION)/promu-$(PROMU_VERSION).$(GO_BUILD_PLATFORM).tar.gz
+
+PROMU := $(FIRST_GOPATH)/bin/promu
 # END copied code
 
 pkgs = $(shell go list ./... | grep -v /vendor/ | grep -v /test/)
@@ -44,7 +46,7 @@ build: promu
 	GO111MODULE=$(GO111MODULE) $(PROMU) build --prefix $(PREFIX) $(PROMU_BINARIES)
 
 check_license:
-	@OUTPUT="$$(promu check licenses)"; \
+	@OUTPUT="$$($(PROMU) check licenses)"; \
 	if [[ $$OUTPUT ]]; then \
 		echo "Found go files without license header:"; \
 		echo "$$OUTPUT"; \

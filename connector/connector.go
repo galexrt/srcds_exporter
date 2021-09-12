@@ -1,11 +1,11 @@
 /*
-Copyright 2020 Alexander Trost <galexrt@googlemail.com>
+Copyright 2021 Alexander Trost <galexrt@googlemail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,6 @@ limitations under the License.
 package connector
 
 import (
-	"fmt"
 	"time"
 
 	rcon "github.com/galexrt/go-rcon"
@@ -48,36 +47,22 @@ func (cn *Connector) NewConnection(name string, opts *ConnectionOptions) error {
 	}
 	con, err := rcon.Connect(opts.Addr,
 		&rcon.ConnectOptions{
-			RCONPassword: opts.RconPassword,
+			RCONPassword: opts.RCONPassword,
 			Timeout:      opts.ConnectTimeout,
 		})
 	if err != nil {
 		return err
 	}
-	var (
-		conTimeoutParsed   time.Duration
-		cacheTimeoutParsed time.Duration
-	)
-	conTimeoutParsed, err = time.ParseDuration(opts.ConnectTimeout)
-	if err != nil {
-		return err
-	}
-	cacheTimeoutParsed, err = time.ParseDuration(opts.CacheTimeout)
-	if err != nil {
-		return err
-	}
-	fmt.Print(cacheTimeoutParsed)
-	// TODO make cache time configurable?
 	cn.connections[opts.Addr] = &Connection{
 		Name:  name,
 		con:   con,
-		cache: *cache.New(cacheTimeoutParsed, 11*time.Second),
+		cache: *cache.New(opts.CacheExpiration, opts.CacheCleanupInterval),
 		opts: map[string]string{
 			"Address":      opts.Addr,
-			"RCONPassword": opts.RconPassword,
-			"Timeout":      opts.ConnectTimeout,
+			"RCONPassword": opts.RCONPassword,
+			"Timeout":      opts.ConnectTimeout.String(),
 		},
-		created: time.Now().Add(conTimeoutParsed),
+		created: time.Now().Add(opts.ConnectTimeout),
 	}
 	return nil
 }

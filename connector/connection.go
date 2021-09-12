@@ -1,11 +1,11 @@
 /*
-Copyright 2020 Alexander Trost <galexrt@googlemail.com>
+Copyright 2021 Alexander Trost <galexrt@googlemail.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,10 +26,11 @@ import (
 
 // ConnectionOptions options for a Connection
 type ConnectionOptions struct {
-	Addr           string
-	RconPassword   string
-	ConnectTimeout string
-	CacheTimeout   string
+	Addr                 string
+	RCONPassword         string
+	ConnectTimeout       time.Duration
+	CacheExpiration      time.Duration
+	CacheCleanupInterval time.Duration
 }
 
 // Connection struct contains all variables necessary for the connection
@@ -37,16 +38,20 @@ type Connection struct {
 	Name    string
 	cmu     sync.Mutex
 	con     *rcon.Server
-	mu      sync.Mutex
 	cache   cache.Cache
 	opts    map[string]string
 	created time.Time
 }
 
 func (c *Connection) reconnect() error {
+	timeoutParsed, err := time.ParseDuration(c.opts["Timeout"])
+	if err != nil {
+		return err
+	}
+
 	con, err := rcon.Connect(c.opts["Address"], &rcon.ConnectOptions{
 		RCONPassword: c.opts["RCONPassword"],
-		Timeout:      c.opts["Timeout"],
+		Timeout:      timeoutParsed,
 	})
 	if err != nil {
 		return err
