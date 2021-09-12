@@ -1,3 +1,8 @@
+## 1.3.0 / 2021-09-12
+
+* [ENHANCEMENT] fix go linter issues and rework cmd entrypoint
+* [ENHANCEMENT] update CI code and only push to quay and ghcr
+
 ## 1.2.12 / 2021-09-11
 
 * [ENHANCEMENT] ci: use go 1.16 for build
