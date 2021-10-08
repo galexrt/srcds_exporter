@@ -1,3 +1,7 @@
+## 1.3.1 / 2021-10-08
+
+* [BUGFIX] try to address #4 issue by updating go-rcon library
+
 ## 1.3.0 / 2021-09-12
 
 * [ENHANCEMENT] fix go linter issues and rework cmd entrypoint
