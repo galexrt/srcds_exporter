@@ -1,3 +1,8 @@
+## 1.3.2 / 2021-10-08
+
+* [BUGFIX] fix issues with connections not being correctly created
+* [ENHANCEMENT] improve server connection error log messages
+
 ## 1.3.1 / 2021-10-08
 
 * [BUGFIX] try to address #4 issue by updating go-rcon library

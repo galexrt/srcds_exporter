@@ -216,7 +216,6 @@ func (p *program) Start(s service.Service) error {
 		}
 	}()
 	collector.SetConnector(connections)
-	defer connections.CloseAll()
 
 	collectors, err := loadCollectors(opts.enabledCollectors)
 	if err != nil {
@@ -413,7 +412,7 @@ func loadConnections(cc *CurrentConfig) *connector.Connector {
 			}
 		}
 		if err != nil {
-			log.Fatalf("Error connecting to server: %v", server.Address)
+			log.Fatalf("Error connecting to %v server after 5 tries: %+v", server.Address, err)
 		}
 		log.Debugf("Connected to server: %v", server.Address)
 	}
@@ -437,6 +436,9 @@ func loadCollectors(list string) (map[string]collector.Collector, error) {
 }
 
 func (p *program) run() {
+	// Defer connection closing
+	defer connections.CloseAll()
+
 	// Background work
 	handler := promhttp.HandlerFor(prometheus.DefaultGatherer,
 		promhttp.HandlerOpts{
