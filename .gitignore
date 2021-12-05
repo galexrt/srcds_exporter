@@ -28,3 +28,4 @@ _testmain.go
 /srcds_exporter
 /.tarballs/
 /.build/
+/.srcds.yml
