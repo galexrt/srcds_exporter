@@ -21,11 +21,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-/*var (
-	currentPlayers     = map[string]map[string]struct{}{}
-	playersToBeRemoved = map[string]map[string]struct{}{}
-)*/
-
 type playersCollector struct {
 	list []*prometheus.Desc
 	ping []*prometheus.Desc
@@ -42,8 +37,6 @@ func NewPlayersCollector() (Collector, error) {
 	ping := []*prometheus.Desc{}
 	loss := []*prometheus.Desc{}
 	for _, con := range getConnections() {
-		/*currentPlayers[con.Name] = map[string]struct{}{}
-		playersToBeRemoved[con.Name] = map[string]struct{}{}*/
 		list = append(list, prometheus.NewDesc(
 			prometheus.BuildFQName(Namespace, "players", "online"),
 			"The current players on the server.",
@@ -62,11 +55,6 @@ func NewPlayersCollector() (Collector, error) {
 			nil, prometheus.Labels{
 				"server": con.Name,
 			}))
-		/*resp, _ := con.Get("status")
-		players := parser.ParsePlayers(resp)
-		for steamID := range players {
-			currentPlayers[con.Name][steamID] = struct{}{}
-		}*/
 	}
 	return &playersCollector{
 		list: list,
@@ -85,23 +73,7 @@ func (c *playersCollector) Update(ch chan<- prometheus.Metric) error {
 		if err != nil {
 			return err
 		}
-		//var value = 1
 		for _, player := range players {
-			/*if _, ok := playersToBeRemoved[con.Name][player.SteamID]; ok {
-				fmt.Println("LINE: 51")
-				delete(playersToBeRemoved[con.Name], player.SteamID)
-				currentPlayers[con.Name][player.SteamID] = struct{}{}
-			} else {
-				if _, ok := currentPlayers[con.Name][player.SteamID]; !ok {
-					fmt.Println("LINE: 56")
-					currentPlayers[con.Name][player.SteamID] = struct{}{}
-				} else {
-					fmt.Println("LINE: 59")
-					value = 0
-					delete(currentPlayers[con.Name], player.SteamID)
-					playersToBeRemoved[con.Name][player.SteamID] = struct{}{}
-				}
-			}*/
 			list := prometheus.NewDesc(
 				prometheus.BuildFQName(Namespace, "players", "online"),
 				"The current players on the server.",
