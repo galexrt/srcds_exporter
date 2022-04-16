@@ -32,7 +32,9 @@ import (
 
 	rcon "github.com/galexrt/go-rcon"
 	"github.com/galexrt/srcds_exporter/collector"
+	"github.com/galexrt/srcds_exporter/config"
 	"github.com/galexrt/srcds_exporter/connector"
+	"github.com/galexrt/srcds_exporter/connector/connections"
 	"github.com/kardianos/service"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -68,22 +70,23 @@ type CmdLineOpts struct {
 	showCollectors bool
 	logLevel       string
 
-	metricsAddr       string
-	metricsPath       string
-	enabledCollectors string
-	configFile        string
+	metricsAddr           string
+	metricsPath           string
+	enabledCollectors     string
+	configFile            string
+	reloadEndpointEnabled bool
 
 	cachingEnabled bool
 	cacheDuration  int64
 }
 
 var (
-	log         = logrus.New()
-	opts        CmdLineOpts
-	flags       = flag.NewFlagSet("srcds_exporter", flag.ExitOnError)
-	connections *connector.Connector
-	cc          *CurrentConfig
-	reloadCh    chan chan error
+	log      = logrus.New()
+	opts     CmdLineOpts
+	flags    = flag.NewFlagSet("srcds_exporter", flag.ExitOnError)
+	cons     *connector.Connector
+	cc       *CurrentConfig
+	reloadCh chan chan error
 )
 
 // SRCDSCollector contains the collectors to be used
@@ -121,26 +124,7 @@ func main() {
 // CurrentConfig current config with a mutex
 type CurrentConfig struct {
 	sync.RWMutex
-	C *Config
-}
-
-// Config Config file structure
-type Config struct {
-	Options Options           `yaml:"options"`
-	Servers map[string]Server `yaml:"servers"`
-}
-
-// Options Options structure
-type Options struct {
-	ConnectTimeout       time.Duration `yaml:"connectTimeout"`
-	CacheExpiration      time.Duration `yaml:"cacheExpiration"`
-	CacheCleanupInterval time.Duration `yaml:"cacheCleanupInterval"`
-}
-
-// Server Server structure
-type Server struct {
-	Address      string `yaml:"address"`
-	RCONPassword string `yaml:"rconPassword"`
+	C *config.Config
 }
 
 func (p *program) Start(s service.Service) error {
@@ -186,9 +170,9 @@ func (p *program) Start(s service.Service) error {
 		log.Info("Caching is disabled by default")
 	}
 
-	connections = connector.NewConnector()
+	cons = connector.NewConnector()
 	cc = &CurrentConfig{
-		C: &Config{},
+		C: &config.Config{},
 	}
 
 	if err := cc.reloadConfig(opts.configFile); err != nil {
@@ -215,7 +199,7 @@ func (p *program) Start(s service.Service) error {
 			}
 		}
 	}()
-	collector.SetConnector(connections)
+	collector.SetConnector(cons)
 
 	collectors, err := loadCollectors(opts.enabledCollectors)
 	if err != nil {
@@ -259,6 +243,7 @@ func init() {
 
 	flags.StringVar(&opts.metricsAddr, "web.listen-address", ":9137", "The address to listen on for HTTP requests")
 	flags.StringVar(&opts.metricsPath, "web.telemetry-path", "/metrics", "Path the metrics will be exposed under")
+	flags.BoolVar(&opts.reloadEndpointEnabled, "web.reload-endpoint-enabled", false, "Enable/Disable the POST config reload endpoint.")
 
 	flags.StringVar(&opts.configFile, "config.file", "./srcds.yaml", "Config file to use.")
 }
@@ -273,10 +258,10 @@ func parseFlagsAndEnvVars() error {
 	for _, v := range os.Environ() {
 		vals := strings.SplitN(v, "=", 2)
 
-		if !strings.HasPrefix(vals[0], "DELLHW_EXPORTER_") {
+		if !strings.HasPrefix(vals[0], "SRCDS_EXPORTER_") {
 			continue
 		}
-		flagName := flagNameFromEnvName(strings.ReplaceAll(vals[0], "DELLHW_EXPORTER_", ""))
+		flagName := flagNameFromEnvName(strings.ReplaceAll(vals[0], "SRCDS_EXPORTER_", ""))
 
 		fn := flags.Lookup(flagName)
 		if fn == nil || fn.Changed {
@@ -292,7 +277,7 @@ func parseFlagsAndEnvVars() error {
 }
 
 func (cc *CurrentConfig) reloadConfig(confFile string) (err error) {
-	var c = &Config{}
+	var c = &config.Config{}
 
 	yamlFile, err := ioutil.ReadFile(confFile)
 	if err != nil {
@@ -396,13 +381,14 @@ func execute(name string, c collector.Collector, ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(scrapeSuccessDesc, prometheus.GaugeValue, success, name)
 }
 
-func loadConnections(cc *CurrentConfig) *connector.Connector {
+func loadConnections(cc *CurrentConfig) error {
 	for name, server := range cc.C.Servers {
 		var err error
 		for i := 0; i < 5; i++ {
-			if err = connections.NewConnection(name,
-				&connector.ConnectionOptions{
+			if err = cons.NewConnection(name,
+				&connections.ConnectionOptions{
 					Addr:                 server.Address,
+					Mode:                 server.Mode,
 					RCONPassword:         server.RCONPassword,
 					ConnectTimeout:       cc.C.Options.ConnectTimeout,
 					CacheCleanupInterval: cc.C.Options.CacheCleanupInterval,
@@ -416,7 +402,7 @@ func loadConnections(cc *CurrentConfig) *connector.Connector {
 		}
 		log.Debugf("Connected to server: %v", server.Address)
 	}
-	return connections
+	return nil
 }
 
 func loadCollectors(list string) (map[string]collector.Collector, error) {
@@ -437,7 +423,7 @@ func loadCollectors(list string) (map[string]collector.Collector, error) {
 
 func (p *program) run() {
 	// Defer connection closing
-	defer connections.CloseAll()
+	defer cons.CloseAll()
 
 	// Background work
 	handler := promhttp.HandlerFor(prometheus.DefaultGatherer,
@@ -451,20 +437,23 @@ func (p *program) run() {
 		handler.ServeHTTP(w, r)
 		cc.RUnlock()
 	})
-	// TODO Only enable reload endpoint if enabled by flag or config
-	http.HandleFunc("/-/reload", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			fmt.Fprintf(w, "This endpoint requires a POST request.\n")
-			return
-		}
 
-		rc := make(chan error)
-		reloadCh <- rc
-		if err := <-rc; err != nil {
-			http.Error(w, fmt.Sprintf("failed to reload config: %s", err), http.StatusInternalServerError)
-		}
-	})
+	// Enable reload endpoint only when enabled by the flag
+	if opts.reloadEndpointEnabled {
+		http.HandleFunc("/-/reload", func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != "POST" {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				fmt.Fprintf(w, "This endpoint requires a POST request.\n")
+				return
+			}
+
+			rc := make(chan error)
+			reloadCh <- rc
+			if err := <-rc; err != nil {
+				http.Error(w, fmt.Sprintf("failed to reload config: %s", err), http.StatusInternalServerError)
+			}
+		})
+	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<!DOCTYPE html>
 		<html>
@@ -476,6 +465,7 @@ func (p *program) run() {
 		</html>`))
 	})
 
+	log.Info("Listening on " + opts.metricsAddr)
 	if err := http.ListenAndServe(opts.metricsAddr, nil); err != nil {
 		log.Fatal(err)
 	}

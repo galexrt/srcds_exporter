@@ -17,7 +17,6 @@ limitations under the License.
 package collector
 
 import (
-	"github.com/galexrt/srcds_exporter/parser"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -34,18 +33,18 @@ func init() {
 func NewPlayerCountCollector() (Collector, error) {
 	current := []*prometheus.Desc{}
 	limit := []*prometheus.Desc{}
-	for _, con := range getConnections() {
+	for server := range getConnections() {
 		current = append(current, prometheus.NewDesc(
 			prometheus.BuildFQName(Namespace, "playercount", "current"),
 			"The current player count of the server.",
 			nil, prometheus.Labels{
-				"server": con.Name,
+				"server": server,
 			}))
 		limit = append(limit, prometheus.NewDesc(
 			prometheus.BuildFQName(Namespace, "playercount", "limit"),
 			"The current player count of the server.",
 			nil, prometheus.Labels{
-				"server": con.Name,
+				"server": server,
 			}))
 	}
 	return &playerCountCollector{
@@ -55,12 +54,8 @@ func NewPlayerCountCollector() (Collector, error) {
 }
 
 func (c *playerCountCollector) Update(ch chan<- prometheus.Metric) error {
-	for _, con := range getConnections() {
-		resp, err := con.Get("status")
-		if err != nil {
-			return err
-		}
-		playerCount, err := parser.ParsePlayerCount(resp)
+	for server, con := range getConnections() {
+		playerCount, err := con.GetPlayerCount()
 		if err != nil {
 			return err
 		}
@@ -69,13 +64,13 @@ func (c *playerCountCollector) Update(ch chan<- prometheus.Metric) error {
 			prometheus.BuildFQName(Namespace, "playercount", "current"),
 			"The current count players on the server.",
 			nil, prometheus.Labels{
-				"server": con.Name,
+				"server": server,
 			})
 		limit := prometheus.NewDesc(
 			prometheus.BuildFQName(Namespace, "playercount", "limit"),
 			"The limit of players on the server.",
 			nil, prometheus.Labels{
-				"server": con.Name,
+				"server": server,
 			})
 		ch <- prometheus.MustNewConstMetric(
 			current, prometheus.GaugeValue, float64(playerCount.Current))
@@ -87,7 +82,7 @@ func (c *playerCountCollector) Update(ch chan<- prometheus.Metric) error {
 				prometheus.BuildFQName(Namespace, "playercount", "humans"),
 				"The current count of humans players on the server.",
 				nil, prometheus.Labels{
-					"server": con.Name,
+					"server": server,
 				})
 			ch <- prometheus.MustNewConstMetric(
 				humans, prometheus.GaugeValue, float64(playerCount.Humans))
@@ -98,7 +93,7 @@ func (c *playerCountCollector) Update(ch chan<- prometheus.Metric) error {
 				prometheus.BuildFQName(Namespace, "playercount", "bots"),
 				"The current count of bot players on the server.",
 				nil, prometheus.Labels{
-					"server": con.Name,
+					"server": server,
 				})
 			ch <- prometheus.MustNewConstMetric(
 				bots, prometheus.GaugeValue, float64(playerCount.Bots))

@@ -27,7 +27,7 @@ const Namespace = "srcds"
 // Factories contains the list of all available collectors.
 var Factories = make(map[string]func() (Collector, error))
 
-var connections *connector.Connector
+var cons *connector.Connector
 
 // Collector is the interface a collector has to implement.
 type Collector interface {
@@ -37,5 +37,5 @@ type Collector interface {
 
 // SetConnector a given connector for the collectors
 func SetConnector(con *connector.Connector) {
-	connections = con
+	cons = con
 }

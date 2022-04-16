@@ -17,7 +17,6 @@ limitations under the License.
 package collector
 
 import (
-	"github.com/galexrt/srcds_exporter/parser"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -36,24 +35,24 @@ func NewPlayersCollector() (Collector, error) {
 	list := []*prometheus.Desc{}
 	ping := []*prometheus.Desc{}
 	loss := []*prometheus.Desc{}
-	for _, con := range getConnections() {
+	for server := range getConnections() {
 		list = append(list, prometheus.NewDesc(
 			prometheus.BuildFQName(Namespace, "players", "online"),
 			"The current players on the server.",
 			nil, prometheus.Labels{
-				"server": con.Name,
+				"server": server,
 			}))
 		ping = append(ping, prometheus.NewDesc(
 			prometheus.BuildFQName(Namespace, "players", "ping"),
 			"The current players ping on the server.",
 			nil, prometheus.Labels{
-				"server": con.Name,
+				"server": server,
 			}))
 		loss = append(loss, prometheus.NewDesc(
 			prometheus.BuildFQName(Namespace, "players", "loss"),
 			"The current players loss on the server.",
 			nil, prometheus.Labels{
-				"server": con.Name,
+				"server": server,
 			}))
 	}
 	return &playersCollector{
@@ -64,35 +63,32 @@ func NewPlayersCollector() (Collector, error) {
 }
 
 func (c *playersCollector) Update(ch chan<- prometheus.Metric) error {
-	for _, con := range getConnections() {
-		resp, err := con.Get("status")
+	for server, con := range getConnections() {
+		players, err := con.GetPlayers()
 		if err != nil {
 			return err
 		}
-		players, err := parser.ParsePlayers(resp)
-		if err != nil {
-			return err
-		}
+
 		for _, player := range players {
 			list := prometheus.NewDesc(
 				prometheus.BuildFQName(Namespace, "players", "online"),
 				"The current players on the server.",
 				nil, prometheus.Labels{
-					"server":  con.Name,
+					"server":  server,
 					"steamid": player.SteamID,
 				})
 			ping := prometheus.NewDesc(
 				prometheus.BuildFQName(Namespace, "players", "ping"),
 				"The current players ping on the server.",
 				nil, prometheus.Labels{
-					"server":  con.Name,
+					"server":  server,
 					"steamid": player.SteamID,
 				})
 			loss := prometheus.NewDesc(
 				prometheus.BuildFQName(Namespace, "players", "loss"),
 				"The current players loss on the server.",
 				nil, prometheus.Labels{
-					"server":  con.Name,
+					"server":  server,
 					"steamid": player.SteamID,
 				})
 			ch <- prometheus.MustNewConstMetric(

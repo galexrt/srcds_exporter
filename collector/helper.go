@@ -19,13 +19,13 @@ package collector
 import (
 	"log"
 
-	"github.com/galexrt/srcds_exporter/connector"
+	"github.com/galexrt/srcds_exporter/connector/connections"
 )
 
-func getConnections() map[string]*connector.Connection {
-	connections, err := connections.GetConnections()
+func getConnections() map[string]connections.IConnection {
+	con, err := cons.GetConnections()
 	if err != nil {
 		log.Fatal(err)
 	}
-	return connections
+	return con
 }

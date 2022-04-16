@@ -17,53 +17,38 @@ limitations under the License.
 package connector
 
 import (
-	"time"
-
-	rcon "github.com/galexrt/go-rcon"
-	cache "github.com/patrickmn/go-cache"
+	"github.com/galexrt/srcds_exporter/config"
+	"github.com/galexrt/srcds_exporter/connector/connections"
 )
 
 // Connector struct contains the connections
 type Connector struct {
-	connections map[string]*Connection
+	connections map[string]connections.IConnection
 }
 
 // NewConnector creates a new Connector object
 func NewConnector() *Connector {
 	return &Connector{
-		connections: make(map[string]*Connection),
+		connections: make(map[string]connections.IConnection),
 	}
 }
 
 // GetConnections holds all connections and reconnects/reopens them if necessary
-func (cn *Connector) GetConnections() (map[string]*Connection, error) {
+func (cn *Connector) GetConnections() (map[string]connections.IConnection, error) {
 	return cn.connections, nil
 }
 
 // NewConnection Add a new connection and initiates first contact connection
-func (cn *Connector) NewConnection(name string, opts *ConnectionOptions) error {
+func (cn *Connector) NewConnection(name string, opts *connections.ConnectionOptions) error {
 	if _, ok := cn.connections[opts.Addr]; ok {
 		return nil
 	}
-	con, err := rcon.Connect(opts.Addr,
-		&rcon.ConnectOptions{
-			RCONPassword: opts.RCONPassword,
-			Timeout:      opts.ConnectTimeout,
-		})
-	if err != nil {
-		return err
+	if opts.Mode == config.RCONMode {
+		cn.connections[opts.Addr] = connections.NewRCON(name, opts)
+	} else {
+		cn.connections[opts.Addr] = connections.NewServerQuery(name, opts)
 	}
-	cn.connections[opts.Addr] = &Connection{
-		Name:  name,
-		con:   con,
-		cache: *cache.New(opts.CacheExpiration, opts.CacheCleanupInterval),
-		opts: map[string]string{
-			"Address":      opts.Addr,
-			"RCONPassword": opts.RCONPassword,
-			"Timeout":      opts.ConnectTimeout.String(),
-		},
-		created: time.Now().Add(opts.ConnectTimeout),
-	}
+
 	return nil
 }
 
