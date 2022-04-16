@@ -13,6 +13,7 @@ TARBALL_DIR  ?= $(CWD)/.tarball
 PACKAGE_DIR  ?= $(CWD)/.package
 ARCH         ?= amd64
 PACKAGE_ARCH ?= linux-amd64
+PREFIX       ?= .
 
 # The GOHOSTARM and PROMU parts have been taken from the prometheus/promu repository
 # which is licensed under Apache License 2.0 Copyright 2018 The Prometheus Authors
@@ -28,7 +29,7 @@ else
 	GO_BUILD_PLATFORM ?= $(GOHOSTOS)-$(GOHOSTARCH)
 endif
 
-PROMU_VERSION ?= 0.7.0
+PROMU_VERSION ?= 0.13.0
 PROMU_URL     := https://github.com/prometheus/promu/releases/download/v$(PROMU_VERSION)/promu-$(PROMU_VERSION).$(GO_BUILD_PLATFORM).tar.gz
 
 PROMU := $(FIRST_GOPATH)/bin/promu
