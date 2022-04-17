@@ -18,33 +18,45 @@ package connections
 
 import (
 	"sync"
+	"time"
 
 	"github.com/galexrt/srcds_exporter/parser/models"
 	"github.com/patrickmn/go-cache"
+	"github.com/sirupsen/logrus"
 	"github.com/xv-chang/rconGo/core"
 )
 
 type ServerQuery struct {
-	opts  *ConnectionOptions
-	cache *cache.Cache
-	con   *core.ServerQuery
-	cmu   sync.Mutex
+	log     *logrus.Entry
+	opts    *ConnectionOptions
+	cache   *cache.Cache
+	con     *core.ServerQuery
+	cmu     sync.Mutex
+	created time.Time
 }
 
-func NewServerQuery(name string, opts *ConnectionOptions) IConnection {
+func NewServerQuery(name string, opts *ConnectionOptions, log *logrus.Logger) IConnection {
 	return &ServerQuery{
-		opts:  opts,
-		cache: cache.New(opts.CacheExpiration, opts.CacheCleanupInterval),
+		log:     log.WithFields(logrus.Fields{"server": name}),
+		opts:    opts,
+		cache:   cache.New(opts.CacheExpiration, opts.CacheCleanupInterval),
+		created: time.Now(),
 	}
 }
 
 func (c *ServerQuery) Reconnect() error {
-	c.cmu.Lock()
-	defer c.cmu.Unlock()
-	if c.con != nil {
-		c.con.Close()
+	if (time.Now().Unix() - c.created.Unix()) > 5 {
+		c.cmu.Lock()
+		defer c.cmu.Unlock()
+		if c.con != nil {
+			c.con.Close()
+		}
+
+		c.con = core.NewServerQuery(c.opts.Addr)
+		c.con.Conn.SetDeadline(time.Now().Add(c.opts.ConnectTimeout))
+		c.created = time.Now()
 	}
-	c.con = core.NewServerQuery(c.opts.Addr)
+
 	return nil
 }
 
@@ -53,32 +65,46 @@ func (c *ServerQuery) Close() {
 	c.con.Close()
 }
 
-// GetMap return map of server
-func (c *ServerQuery) GetMap() (string, error) {
-	if c.con == nil {
+func (c *ServerQuery) getInfo() *core.ServerInfo {
+	defer func() {
+		if recover() != nil {
+			c.log.Errorf("got panic while connecting to server, reconnecting")
+		}
+	}()
+
+	out, found := c.cache.Get("data")
+	if !found {
 		c.Reconnect()
+
+		out = c.con.GetInfo()
+		c.cache.Add("data", out, cache.DefaultExpiration)
 	}
 
-	c.cmu.Lock()
-	defer c.cmu.Unlock()
+	return out.(*core.ServerInfo)
+}
 
-	return c.con.GetInfo().Map, nil
+// GetMap return map of server
+func (c *ServerQuery) GetMap() (string, error) {
+	info := c.getInfo()
+	if info == nil {
+		return "", nil
+	}
+
+	return info.Map, nil
 }
 
 // GetPlayerCount return server player count
 func (c *ServerQuery) GetPlayerCount() (*models.PlayerCount, error) {
-	if c.con == nil {
-		c.Reconnect()
+	info := c.getInfo()
+	if info == nil {
+		return nil, nil
 	}
 
-	c.cmu.Lock()
-	defer c.cmu.Unlock()
-
 	playerCount := &models.PlayerCount{
-		Current: int(c.con.GetInfo().Players),
-		Max:     int(c.con.GetInfo().MaxPlayers),
-		Bots:    int(c.con.GetInfo().Bots),
-		Humans:  int(c.con.GetInfo().Players),
+		Current: int(info.Players),
+		Max:     int(info.MaxPlayers),
+		Bots:    int(info.Bots),
+		Humans:  int(info.Players),
 	}
 
 	return playerCount, nil

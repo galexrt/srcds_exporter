@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/galexrt/go-rcon"
-	"github.com/galexrt/srcds_exporter/config"
 	"github.com/galexrt/srcds_exporter/parser"
 	"github.com/galexrt/srcds_exporter/parser/models"
 	"github.com/patrickmn/go-cache"
@@ -44,16 +43,14 @@ func NewRCON(name string, opts *ConnectionOptions) IConnection {
 }
 
 func (c *RCON) Reconnect() error {
-	if c.opts.Mode != config.ServerQueryMode {
-		rcon, err := rcon.Connect(c.opts.Addr, &rcon.ConnectOptions{
-			RCONPassword: c.opts.RCONPassword,
-			Timeout:      c.opts.ConnectTimeout,
-		})
-		if err != nil {
-			return err
-		}
-		c.rcon = rcon
+	rcon, err := rcon.Connect(c.opts.Addr, &rcon.ConnectOptions{
+		RCONPassword: c.opts.RCONPassword,
+		Timeout:      c.opts.ConnectTimeout,
+	})
+	if err != nil {
+		return err
 	}
+	c.rcon = rcon
 	c.created = time.Now()
 	return nil
 }

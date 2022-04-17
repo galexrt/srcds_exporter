@@ -1,8 +1,8 @@
 ---
 options:
-  connectTimeout: 60s
-  cacheExpiration: 15s
-  cacheCleanupInterval: 11s
+  connectTimeout: 5s
+  cacheExpiration: 20s
+  cacheCleanupInterval: 12s
 servers:
   example_server1:
     address: 127.0.0.1:27015

@@ -1,3 +1,7 @@
+## 1.4.1 / 2022-04-17
+
+* [BUGFIX] tweak server query connection logic
+
 ## 1.4.0 / 2022-04-17
 
 * [ENHANCEMENT] add server query support

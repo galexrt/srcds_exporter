@@ -170,7 +170,7 @@ func (p *program) Start(s service.Service) error {
 		log.Info("Caching is disabled by default")
 	}
 
-	cons = connector.NewConnector()
+	cons = connector.NewConnector(log)
 	cc = &CurrentConfig{
 		C: &config.Config{},
 	}

@@ -19,16 +19,19 @@ package connector
 import (
 	"github.com/galexrt/srcds_exporter/config"
 	"github.com/galexrt/srcds_exporter/connector/connections"
+	"github.com/sirupsen/logrus"
 )
 
 // Connector struct contains the connections
 type Connector struct {
+	log         *logrus.Logger
 	connections map[string]connections.IConnection
 }
 
 // NewConnector creates a new Connector object
-func NewConnector() *Connector {
+func NewConnector(log *logrus.Logger) *Connector {
 	return &Connector{
+		log:         log,
 		connections: make(map[string]connections.IConnection),
 	}
 }
@@ -46,7 +49,7 @@ func (cn *Connector) NewConnection(name string, opts *connections.ConnectionOpti
 	if opts.Mode == config.RCONMode {
 		cn.connections[opts.Addr] = connections.NewRCON(name, opts)
 	} else {
-		cn.connections[opts.Addr] = connections.NewServerQuery(name, opts)
+		cn.connections[opts.Addr] = connections.NewServerQuery(name, opts, cn.log)
 	}
 
 	return nil

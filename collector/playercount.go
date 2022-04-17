@@ -59,6 +59,9 @@ func (c *playerCountCollector) Update(ch chan<- prometheus.Metric) error {
 		if err != nil {
 			return err
 		}
+		if playerCount == nil {
+			return nil
+		}
 
 		current := prometheus.NewDesc(
 			prometheus.BuildFQName(Namespace, "playercount", "current"),

@@ -31,19 +31,6 @@ func init() {
 // NewMapCollector returns a new Collector exposing the current map.
 func NewMapCollector() (Collector, error) {
 	current := []*prometheus.Desc{}
-	for server, con := range getConnections() {
-		mapName, err := con.GetMap()
-		if err != nil {
-			return nil, err
-		}
-		current = append(current, prometheus.NewDesc(
-			prometheus.BuildFQName(Namespace, "", "map"),
-			"The current map on the server.",
-			nil, prometheus.Labels{
-				"server": server,
-				"map":    mapName,
-			}))
-	}
 	return &mapCollector{
 		current: current,
 	}, nil
@@ -54,6 +41,9 @@ func (c *mapCollector) Update(ch chan<- prometheus.Metric) error {
 		mapName, err := con.GetMap()
 		if err != nil {
 			return err
+		}
+		if mapName == "" {
+			continue
 		}
 		current := prometheus.NewDesc(
 			prometheus.BuildFQName(Namespace, "", "map"),
