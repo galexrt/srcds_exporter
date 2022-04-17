@@ -1,3 +1,7 @@
+## 1.4.0 / 2022-04-17
+
+* [ENHANCEMENT] add server query support
+
 ## 1.3.2 / 2021-10-08
 
 * [BUGFIX] fix issues with connections not being correctly created
