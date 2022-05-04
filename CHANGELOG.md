@@ -1,3 +1,8 @@
+## 1.4.2 / 2022-05-04
+
+* [ENHANCEMENT] update minimum go version to 1.18
+* [ENHANCEMENT] update all dependencies
+
 ## 1.4.1 / 2022-04-17
 
 * [BUGFIX] tweak server query connection logic
