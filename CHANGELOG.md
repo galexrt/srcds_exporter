@@ -1,3 +1,7 @@
+## 1.4.3 / 2022-05-31
+
+* [SECURITY] update gopkg.in/yaml.v3 to v3.0.1 (CVE-2022-28948)
+
 ## 1.4.2 / 2022-05-04
 
 * [ENHANCEMENT] update minimum go version to 1.18
