@@ -1,3 +1,7 @@
+## 1.5.1 / 2023-03-03
+
+* [BUGFIX] fix changelog entry that caused the 1.5.0 release build to fail
+
 ## 1.5.0 / 2023-03-03
 
 * [BUGFIX] tweak status parser regex - Seems that CS:GO changed the `status` command's output slightly. Resolves #7
