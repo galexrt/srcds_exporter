@@ -1,3 +1,7 @@
+## 1.5.0 
+
+* [BUGFIX] tweak status parser regex - Seems that CS:GO changed the `status` command's output slightly. Resolves #7
+
 ## 1.4.3 / 2022-05-31
 
 * [SECURITY] update gopkg.in/yaml.v3 to v3.0.1 (CVE-2022-28948)
