@@ -1,4 +1,4 @@
-## 1.5.0 
+## 1.5.0 / 2023-03-03
 
 * [BUGFIX] tweak status parser regex - Seems that CS:GO changed the `status` command's output slightly. Resolves #7
 
