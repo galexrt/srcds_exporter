@@ -28,9 +28,9 @@ import (
 var (
 	hostnameRegex    = regexp.MustCompile(`(?m)^hostname\s*: (.*)$`)
 	versionRegex     = regexp.MustCompile(`(?m)^version\s*: (.*)$`)
-	mapRegex         = regexp.MustCompile(`(?m)^map\s*: ([a-zA-Z_0-9-]+) .*$`)
+	mapRegex         = regexp.MustCompile(`(?m)^map\s*: ([a-zA-Z_0-9-]+)( .*)?$`)
 	playerCountRegex = regexp.MustCompile(`(?m)^players\s*:\s*((?P<current1>[0-9]+)\s*\((?P<max1>[0-9]+)\s*max\)|(?P<humans>[0-9]+) humans,\s+(?P<bots>[0-9]+) bots\s+\((?P<max2>[0-9]+)(/[0-9]+)?\s+max\)).*$`)
-	playerRegex      = regexp.MustCompile(`(?m)^#\s+([0-9]+)\s+"([^"]*)"\s+(\S+)\s+[0-9:]+\s+([0-9]+)\s+([0-9]+)\s+([a-z]+)(\s+(([0-9]{1,3}.){3}[0-9]{1,3}):([0-9]+))?$`)
+	playerRegex      = regexp.MustCompile(`(?m)^#\s+(?P<userid>[0-9]+)(\s+\d+)?\s+"(?P<username>[^"]*)"\s+(?P<steamid>\S+)\s+(?P<connected>[0-9:]+)\s+(?P<ping>[0-9]+)\s+(?P<loss>[0-9]+)\s+(?P<state>[a-z]+)(\s+\d+)?(\s+(?P<ip>([0-9]{1,3}.){3}[0-9]{1,3}):(?P<connport>[0-9]+))?$`)
 )
 
 // ParseHostname parse SRCDS `status` command to retrieve server hostname
@@ -120,24 +120,37 @@ func ParsePlayerCount(input string) (*models.PlayerCount, error) {
 // ParsePlayers parse SRCDS `status` command to retrieve players on server
 func ParsePlayers(input string) (map[string]*models.Player, error) {
 	input = strings.Replace(input, "\000", "", -1)
+
 	matches := playerRegex.FindAllStringSubmatch(input, -1)
+	names := playerRegex.SubexpNames()
+	md := make([]map[string]string, len(matches))
+	for i, n := range matches {
+		md[i] = map[string]string{}
+		for k := 0; k < len(n); k++ {
+			key := names[k]
+			if key == "" {
+				continue
+			}
+			md[i][key] = n[k]
+		}
+	}
 	if len(matches) == 0 {
 		return nil, errors.New("no matches found in input")
 	}
 	players := make(map[string]*models.Player)
-	for _, m := range matches {
-		userID, _ := strconv.Atoi(m[1])
-		ping, _ := strconv.Atoi(m[4])
-		loss, _ := strconv.Atoi(m[5])
-		connPort, _ := strconv.Atoi(m[10])
-		players[m[3]] = &models.Player{
-			Username: m[2],
+	for _, m := range md {
+		userID, _ := strconv.Atoi(m["userid"])
+		ping, _ := strconv.Atoi(m["ping"])
+		loss, _ := strconv.Atoi(m["loss"])
+		connPort, _ := strconv.Atoi(m["connport"])
+		players[m["steamid"]] = &models.Player{
+			Username: m["username"],
 			UserID:   userID,
-			SteamID:  m[3],
-			State:    m[6],
+			SteamID:  m["steamid"],
+			State:    m["state"],
 			Ping:     ping,
 			Loss:     loss,
-			IP:       m[8],
+			IP:       m["ip"],
 			ConnPort: connPort,
 		}
 	}

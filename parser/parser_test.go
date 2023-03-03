@@ -39,6 +39,10 @@ var parseHostnameTests = []struct {
 		`nope: nope`,
 		"",
 	},
+	{
+		`hostname: Counter-Strike: Global Offensive`,
+		"Counter-Strike: Global Offensive",
+	},
 }
 
 func TestParseHostname(t *testing.T) {
@@ -60,6 +64,10 @@ var parseVersionTests = []struct {
 		`nope: nope`,
 		"",
 	},
+	{
+		`version : 1.38.5.5/13855 1547/8853 secure  [G:1:6214660]`,
+		"1.38.5.5/13855 1547/8853 secure  [G:1:6214660]",
+	},
 }
 
 func TestParseVersion(t *testing.T) {
@@ -80,6 +88,10 @@ var parseMapTests = []struct {
 	{
 		`nope: nope`,
 		"",
+	},
+	{
+		`map     : de_dust2`,
+		"de_dust2",
 	},
 }
 
@@ -130,6 +142,16 @@ var parsePlayerCountTests = []struct {
 		},
 		false,
 	},
+	{
+		`players : 1 humans, 9 bots (20/0 max) (not hibernating)`,
+		&models.PlayerCount{
+			Current: 10,
+			Max:     20,
+			Humans:  1,
+			Bots:    9,
+		},
+		false,
+	},
 }
 
 func TestParsePlayerCount(t *testing.T) {
@@ -160,6 +182,22 @@ var parsePlayersTests = []struct {
 				Loss:     0,
 				State:    "active",
 				IP:       "10.10.220.12",
+				ConnPort: 27005,
+			},
+		},
+		false,
+	},
+	{
+		`# 22 1 "bonkers" STEAM_1:1:1234567 00:29 46 0 active 128000 192.168.1.2:27005`,
+		map[string]*models.Player{
+			"STEAM_1:1:1234567": {
+				Username: "bonkers",
+				SteamID:  "STEAM_1:1:1234567",
+				UserID:   22,
+				Ping:     46,
+				Loss:     0,
+				State:    "active",
+				IP:       "192.168.1.2",
 				ConnPort: 27005,
 			},
 		},
