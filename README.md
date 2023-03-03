@@ -11,17 +11,18 @@ Container Image available from:
 
 Container Image Tags:
 
-* `GIT_TAG` - Each Git tag is built and published.
+* `GIT_TAG` - Each [Git tags/ releases](https://github.com/galexrt/srcds_exporter/releases/) is built and published.
 
 ## Compatibility
 
 ### Tested Games
 
-* [Garry's Mod](https://store.steampowered.com/app/4000/Garrys_Mod/)
-* [Counter-Strike: Source](https://store.steampowered.com/app/240/CounterStrike_Source/)
 * [Counter-Strike: Global Offensive](https://store.steampowered.com/app/730/CounterStrike_Global_Offensive/)
+* [Counter-Strike: Source](https://store.steampowered.com/app/240/CounterStrike_Source/)
+* [Garry's Mod](https://store.steampowered.com/app/4000/Garrys_Mod/)
+* [Team Fortress 2](https://store.steampowered.com/app/440/Team_Fortress_2/)
 
-If you have any issues with a game, please create an issue containing the rcon output of `status` command and we'll see what we can do to fix compatibility.
+If you have any issues with a game, please create an issue containing the RCON output of `status` command and we'll see what we can do to fix compatibility.
 
 ## Collectors
 
