@@ -67,8 +67,8 @@ func (c *ServerQuery) Close() {
 
 func (c *ServerQuery) getInfo() *core.ServerInfo {
 	defer func() {
-		if recover() != nil {
-			c.log.Errorf("got panic while connecting to server, reconnecting")
+		if err := recover(); err != nil {
+			c.log.Errorf("got panic while connecting to server, reconnecting: %s", err)
 		}
 	}()
 
