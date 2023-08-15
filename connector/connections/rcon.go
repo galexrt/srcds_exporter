@@ -38,7 +38,7 @@ func NewRCON(name string, opts *ConnectionOptions) IConnection {
 	return &RCON{
 		opts:    opts,
 		cache:   cache.New(opts.CacheExpiration, opts.CacheCleanupInterval),
-		created: time.Now(),
+		created: time.Time{},
 	}
 }
 
