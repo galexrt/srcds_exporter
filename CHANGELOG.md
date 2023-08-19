@@ -1,3 +1,7 @@
+## 1.6.0 / 2023-08-19
+
+* [BUGFIX] [Fixed issue where RCON connections will panic](https://github.com/galexrt/srcds_exporter/pull/8)
+
 ## 1.5.1 / 2023-03-03
 
 * [BUGFIX] fix changelog entry that caused the 1.5.0 release build to fail
