@@ -17,6 +17,8 @@ limitations under the License.
 package connector
 
 import (
+	"fmt"
+
 	"github.com/galexrt/srcds_exporter/config"
 	"github.com/galexrt/srcds_exporter/connector/connections"
 	"github.com/sirupsen/logrus"
@@ -24,14 +26,18 @@ import (
 
 // Connector struct contains the connections
 type Connector struct {
-	log         *logrus.Logger
+	log        *logrus.Logger
+	a2sEnabled bool
+
 	connections map[string]connections.IConnection
 }
 
-// NewConnector creates a new Connector object
-func NewConnector(log *logrus.Logger) *Connector {
+// NewConnector creates a new Connector object.
+// a2sEnabled define whether servers configured with mode "A2S" (--a2s flag) may be connected to.
+func NewConnector(log *logrus.Logger, a2sEnabled bool) *Connector {
 	return &Connector{
 		log:         log,
+		a2sEnabled:  a2sEnabled,
 		connections: make(map[string]connections.IConnection),
 	}
 }
@@ -46,9 +52,15 @@ func (cn *Connector) NewConnection(name string, opts *connections.ConnectionOpti
 	if _, ok := cn.connections[opts.Addr]; ok {
 		return nil
 	}
-	if opts.Mode == config.RCONMode {
+	switch opts.Mode {
+	case config.RCONMode:
 		cn.connections[opts.Addr] = connections.NewRCON(name, opts)
-	} else {
+	case config.A2SMode:
+		if !cn.a2sEnabled {
+			return fmt.Errorf("server %q is configured with mode %q but A2S support is disabled, enable it with the --a2s flag", name, opts.Mode)
+		}
+		cn.connections[opts.Addr] = connections.NewA2S(name, opts, cn.log)
+	default:
 		cn.connections[opts.Addr] = connections.NewServerQuery(name, opts, cn.log)
 	}
 

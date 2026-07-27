@@ -46,4 +46,5 @@ type QueryMode string
 const (
 	RCONMode        QueryMode = "RCON"
 	ServerQueryMode QueryMode = "ServerQuery"
+	A2SMode         QueryMode = "A2S"
 )
