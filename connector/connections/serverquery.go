@@ -40,7 +40,7 @@ func NewServerQuery(name string, opts *ConnectionOptions, log *logrus.Logger) IC
 		log:     log.WithFields(logrus.Fields{"server": name}),
 		opts:    opts,
 		cache:   cache.New(opts.CacheExpiration, opts.CacheCleanupInterval),
-		created: time.Now(),
+		created: time.Time{},
 	}
 }
 
