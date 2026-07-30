@@ -24,6 +24,16 @@ Container Image Tags:
 
 If you have any issues with a game, please create an issue containing the RCON output of `status` command and we'll see what we can do to fix compatibility.
 
+## Connection Modes
+
+Each server in the config file can set a `mode` to control how it is queried (see [srcds.example.yml](srcds.example.yml)):
+
+| Mode          | Description                                                                    |
+| ------------- | ------------------------------------------------------------------------------- |
+| `RCON`        | Default. Queries the server via RCON (`status` command).                        |
+| `ServerQuery` | Queries the server via the Source Server Query protocol.                        |
+| `A2S`         | Queries the server via the [Valve A2S protocol](https://github.com/rumblefrog/go-a2s). Requires the `--a2s` flag to be set, and does not use `rconPassword`. Player metrics won't have a SteamID, ping or packet loss, as A2S doesn't expose them. |
+
 ## Collectors
 
 A collector is collecting certain metrics. Which collectors are enabled is controlled by the `--collectors.enabled` flag.
@@ -56,6 +66,7 @@ Example output:
 ```shell
 $ srcds_exporter --help
 Usage of srcds_exporter:
+      --a2s                          Enable A2S query support (opt-in, required for servers configured with mode: A2S).
       --collectors.enabled string   Comma separated list of active collectors (default "map,playercount")
       --collectors.print            If true, print available collectors and exit.
       --config.file string          Config file to use. (default "./srcds.yaml")

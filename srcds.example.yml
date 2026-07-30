@@ -10,3 +10,7 @@ servers:
   example_server2:
     address: 127.0.0.1:27016
     rconPassword: YOUR_RCON_PASSWORD
+  #A2's example
+  example_server3:
+    address: 127.0.0.1:27017
+    mode: A2S

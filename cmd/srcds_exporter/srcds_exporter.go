@@ -78,6 +78,8 @@ type CmdLineOpts struct {
 
 	cachingEnabled bool
 	cacheDuration  int64
+
+	a2sEnabled bool
 }
 
 var (
@@ -170,7 +172,11 @@ func (p *program) Start(s service.Service) error {
 		log.Info("Caching is disabled by default")
 	}
 
-	cons = connector.NewConnector(log)
+	if opts.a2sEnabled {
+		log.Info("A2S query support enabled")
+	}
+
+	cons = connector.NewConnector(log, opts.a2sEnabled)
 	cc = &CurrentConfig{
 		C: &config.Config{},
 	}
@@ -246,6 +252,8 @@ func init() {
 	flags.BoolVar(&opts.reloadEndpointEnabled, "web.reload-endpoint-enabled", false, "Enable/Disable the POST config reload endpoint.")
 
 	flags.StringVar(&opts.configFile, "config.file", "./srcds.yaml", "Config file to use.")
+
+	flags.BoolVar(&opts.a2sEnabled, "a2s", false, "Enable A2S query support (opt-in, required for servers configured with mode: A2S).")
 }
 
 func flagNameFromEnvName(s string) string {
