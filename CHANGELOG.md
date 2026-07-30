@@ -1,3 +1,8 @@
+## 1.7.0 / 2026-07-31
+
+* [ENHANCEMENT] [add a2s support by @Dobytchick](https://github.com/galexrt/srcds_exporter/pull/77)
+* [CHORE] update dependencies and golang (1.25.12)
+
 ## 1.6.0 / 2023-08-19
 
 * [BUGFIX] [Fixed issue where RCON connections will panic](https://github.com/galexrt/srcds_exporter/pull/8)
