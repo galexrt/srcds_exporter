@@ -1,9 +1,9 @@
 module github.com/galexrt/srcds_exporter
 
-go 1.25.12
+go 1.27.0
 
 require (
-	github.com/galexrt/go-rcon v0.0.4
+	github.com/galexrt/go-rcon v0.0.5
 	github.com/kardianos/service v1.3.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.24.1
