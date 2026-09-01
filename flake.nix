@@ -37,6 +37,7 @@
             # goimports, godoc, etc.
             gotools
             gofumpt
+            golangci-lint
           ];
         };
       });

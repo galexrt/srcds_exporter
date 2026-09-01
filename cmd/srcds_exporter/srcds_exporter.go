@@ -18,7 +18,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -27,8 +27,6 @@ import (
 	"sync"
 	"syscall"
 	"time"
-
-	flag "github.com/spf13/pflag"
 
 	rcon "github.com/galexrt/go-rcon"
 	"github.com/galexrt/srcds_exporter/collector"
@@ -39,7 +37,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
+	sloglogrus "github.com/samber/slog-logrus/v2"
 	"github.com/sirupsen/logrus"
+	flag "github.com/spf13/pflag"
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -83,7 +83,8 @@ type CmdLineOpts struct {
 }
 
 var (
-	log      = logrus.New()
+	logger   = logrus.New()
+	slogger  = slog.New(sloglogrus.Option{Logger: logger}.NewLogrusHandler())
 	opts     CmdLineOpts
 	flags    = flag.NewFlagSet("srcds_exporter", flag.ExitOnError)
 	cons     *connector.Connector
@@ -114,12 +115,12 @@ func main() {
 	prg := &program{}
 	s, err := service.New(prg, svcConfig)
 	if err != nil {
-		log.Fatal(err)
+		fatal(err)
 	}
 
 	err = s.Run()
 	if err != nil {
-		log.Error(err)
+		slogger.Error("service failed", "error", err)
 	}
 }
 
@@ -129,9 +130,40 @@ type CurrentConfig struct {
 	C *config.Config
 }
 
+func mapLogrusToSlogLevel(l logrus.Level) slog.Level {
+	switch l {
+	case logrus.PanicLevel:
+		return slog.LevelError
+	case logrus.FatalLevel:
+		return slog.LevelError
+	case logrus.ErrorLevel:
+		return slog.LevelError
+	case logrus.WarnLevel:
+		return slog.LevelWarn
+	case logrus.InfoLevel:
+		return slog.LevelInfo
+	case logrus.DebugLevel:
+		return slog.LevelDebug
+	case logrus.TraceLevel:
+		return slog.LevelDebug
+	default:
+		return slog.LevelInfo
+	}
+}
+
+func fatal(err error) {
+	slogger.Error("fatal error", "error", err)
+	os.Exit(1)
+}
+
+func fatalf(format string, args ...any) {
+	slogger.Error(fmt.Sprintf(format, args...))
+	os.Exit(1)
+}
+
 func (p *program) Start(s service.Service) error {
 	if err := parseFlagsAndEnvVars(); err != nil {
-		log.Fatal(err)
+		fatal(err)
 	}
 
 	if opts.version {
@@ -152,40 +184,41 @@ func (p *program) Start(s service.Service) error {
 		os.Exit(0)
 	}
 
-	log.Out = os.Stdout
+	logger.Out = os.Stdout
 
 	// Set log level
 	l, err := logrus.ParseLevel(opts.logLevel)
 	if err != nil {
-		log.Fatal(err)
+		fatal(err)
 	}
-	log.SetLevel(l)
+	logger.SetLevel(l)
 
-	rcon.SetLog(log)
+	slogger = slog.New(sloglogrus.Option{Level: mapLogrusToSlogLevel(l), Logger: logger}.NewLogrusHandler())
+	rcon.SetLog(slogger)
 
-	log.Infoln("Starting srcds_exporter", version.Info())
-	log.Infoln("Build context", version.BuildContext())
+	slogger.Info("Starting srcds_exporter", "version", version.Info())
+	slogger.Info("Build context", "context", version.BuildContext())
 
 	if opts.cachingEnabled {
-		log.Infof("Caching enabled. Cache Duration: %ds", opts.cacheDuration)
+		slogger.Info("Caching enabled", "cache_duration_seconds", opts.cacheDuration)
 	} else {
-		log.Info("Caching is disabled by default")
+		slogger.Info("Caching is disabled by default")
 	}
 
 	if opts.a2sEnabled {
-		log.Info("A2S query support enabled")
+		slogger.Info("A2S query support enabled")
 	}
 
-	cons = connector.NewConnector(log, opts.a2sEnabled)
+	cons = connector.NewConnector(logger, opts.a2sEnabled)
 	cc = &CurrentConfig{
 		C: &config.Config{},
 	}
 
 	if err := cc.reloadConfig(opts.configFile); err != nil {
-		log.Fatalf("Error loading config: %s", err)
+		fatalf("Error loading config: %s", err)
 	}
 
-	hup := make(chan os.Signal)
+	hup := make(chan os.Signal, 1)
 	reloadCh := make(chan chan error)
 	signal.Notify(hup, syscall.SIGHUP)
 	go func() {
@@ -193,11 +226,12 @@ func (p *program) Start(s service.Service) error {
 			select {
 			case <-hup:
 				if err := cc.reloadConfig(opts.configFile); err != nil {
-					log.Errorf("Error reloading config: %s", err)
+					slogger.Error("Error reloading config", "error", err)
 				}
+
 			case rc := <-reloadCh:
 				if err := cc.reloadConfig(opts.configFile); err != nil {
-					log.Errorf("Error reloading config: %s", err)
+					slogger.Error("Error reloading config", "error", err)
 					rc <- err
 				} else {
 					rc <- nil
@@ -209,15 +243,15 @@ func (p *program) Start(s service.Service) error {
 
 	collectors, err := loadCollectors(opts.enabledCollectors)
 	if err != nil {
-		log.Fatalf("Couldn't load collectors: %s", err)
+		fatalf("Couldn't load collectors: %s", err)
 	}
-	log.Infof("Enabled collectors:")
+	slogger.Info("Enabled collectors:")
 	for n := range collectors {
-		log.Infof(" - %s", n)
+		slogger.Info("enabled collector", "collector", n)
 	}
 
 	if err = prometheus.Register(NewSRCDSCollector(collectors, opts.cachingEnabled, opts.cacheDuration)); err != nil {
-		log.Fatalf("Couldn't register collector: %s", err)
+		fatalf("Couldn't register collector: %s", err)
 	}
 
 	// non-blocking start
@@ -285,16 +319,16 @@ func parseFlagsAndEnvVars() error {
 }
 
 func (cc *CurrentConfig) reloadConfig(confFile string) (err error) {
-	var c = &config.Config{}
+	c := &config.Config{}
 
-	yamlFile, err := ioutil.ReadFile(confFile)
+	yamlFile, err := os.ReadFile(confFile)
 	if err != nil {
-		log.Errorf("Error reading config file: %s", err)
+		slogger.Error("Error reading config file", "error", err)
 		return err
 	}
 
 	if err := yaml.Unmarshal(yamlFile, c); err != nil {
-		log.Errorf("Error parsing config file: %s", err)
+		slogger.Error("Error parsing config file", "error", err)
 		return err
 	}
 
@@ -303,7 +337,7 @@ func (cc *CurrentConfig) reloadConfig(confFile string) (err error) {
 	loadConnections(cc)
 	cc.Unlock()
 
-	log.Infoln("Loaded config file")
+	slogger.Info("Loaded config file")
 	return nil
 }
 
@@ -321,9 +355,9 @@ func (n *SRCDSCollector) Collect(outgoingCh chan<- prometheus.Metric) {
 
 		expiry := n.lastCollectTime.Add(n.cacheDuration)
 		if time.Now().Before(expiry) {
-			log.Debugf("Using cache. Now: %s, Expiry: %s, LastCollect: %s", time.Now().String(), expiry.String(), n.lastCollectTime.String())
+			slogger.Debug("Using cache", "now", time.Now(), "expiry", expiry, "last_collect", n.lastCollectTime)
 			for _, cachedMetric := range n.cache {
-				log.Debugf("Pushing cached metric %s to outgoingCh", cachedMetric.Desc().String())
+				slogger.Debug("Pushing cached metric to outgoingCh", "metric", cachedMetric.Desc().String())
 				outgoingCh <- cachedMetric
 			}
 			return
@@ -336,18 +370,16 @@ func (n *SRCDSCollector) Collect(outgoingCh chan<- prometheus.Metric) {
 
 	// Wait to ensure outgoingCh is not closed before the goroutine is finished
 	wgOutgoing := sync.WaitGroup{}
-	wgOutgoing.Add(1)
-	go func() {
+	wgOutgoing.Go(func() {
 		for metric := range metricsCh {
 			outgoingCh <- metric
 			if n.cachingEnabled {
-				log.Debugf("Appending metric %s to cache", metric.Desc().String())
+				slogger.Debug("Appending metric to cache", "metric", metric.Desc().String())
 				n.cache = append(n.cache, metric)
 			}
 		}
-		log.Debug("Finished pushing metrics from metricsCh to outgoingCh")
-		wgOutgoing.Done()
-	}()
+		slogger.Debug("Finished pushing metrics from metricsCh to outgoingCh")
+	})
 
 	wgCollection := sync.WaitGroup{}
 	wgCollection.Add(len(n.collectors))
@@ -358,18 +390,18 @@ func (n *SRCDSCollector) Collect(outgoingCh chan<- prometheus.Metric) {
 		}(name, coll)
 	}
 
-	log.Debug("Waiting for collectors")
+	slogger.Debug("Waiting for collectors")
 	wgCollection.Wait()
-	log.Debug("Finished waiting for collectors")
+	slogger.Debug("Finished waiting for collectors")
 
 	n.lastCollectTime = time.Now()
-	log.Debugf("Updated lastCollectTime to %s", n.lastCollectTime.String())
+	slogger.Debug("Updated lastCollectTime", "last_collect", n.lastCollectTime)
 
 	close(metricsCh)
 
-	log.Debug("Waiting for outgoing Adapter")
+	slogger.Debug("Waiting for outgoing Adapter")
 	wgOutgoing.Wait()
-	log.Debug("Finished waiting for outgoing Adapter")
+	slogger.Debug("Finished waiting for outgoing Adapter")
 }
 
 func execute(name string, c collector.Collector, ch chan<- prometheus.Metric) {
@@ -379,10 +411,10 @@ func execute(name string, c collector.Collector, ch chan<- prometheus.Metric) {
 	var success float64
 
 	if err != nil {
-		log.Errorf("%s collector failed after %fs: %s", name, duration.Seconds(), err)
+		slogger.Error("collector failed", "collector", name, "duration_seconds", duration.Seconds(), "error", err)
 		success = 0
 	} else {
-		log.Debugf("%s collector succeeded after %fs.", name, duration.Seconds())
+		slogger.Debug("collector succeeded", "collector", name, "duration_seconds", duration.Seconds())
 		success = 1
 	}
 	ch <- prometheus.MustNewConstMetric(scrapeDurationDesc, prometheus.GaugeValue, duration.Seconds(), name)
@@ -392,7 +424,7 @@ func execute(name string, c collector.Collector, ch chan<- prometheus.Metric) {
 func loadConnections(cc *CurrentConfig) error {
 	for name, server := range cc.C.Servers {
 		var err error
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			if err = cons.NewConnection(name,
 				&connections.ConnectionOptions{
 					Addr:                 server.Address,
@@ -406,16 +438,16 @@ func loadConnections(cc *CurrentConfig) error {
 			}
 		}
 		if err != nil {
-			log.Fatalf("Error connecting to %v server after 5 tries: %+v", server.Address, err)
+			fatalf("Error connecting to %v server after 5 tries: %+v", server.Address, err)
 		}
-		log.Debugf("Connected to server: %v", server.Address)
+		slogger.Debug("Connected to server", "address", server.Address)
 	}
 	return nil
 }
 
 func loadCollectors(list string) (map[string]collector.Collector, error) {
 	collectors := map[string]collector.Collector{}
-	for _, name := range strings.Split(list, ",") {
+	for name := range strings.SplitSeq(list, ",") {
 		fn, ok := collector.Factories[name]
 		if !ok {
 			return nil, fmt.Errorf("collector '%s' not available", name)
@@ -436,7 +468,7 @@ func (p *program) run() {
 	// Background work
 	handler := promhttp.HandlerFor(prometheus.DefaultGatherer,
 		promhttp.HandlerOpts{
-			ErrorLog:      log,
+			ErrorLog:      logger,
 			ErrorHandling: promhttp.ContinueOnError,
 		})
 
@@ -473,8 +505,8 @@ func (p *program) run() {
 		</html>`))
 	})
 
-	log.Info("Listening on " + opts.metricsAddr)
+	slogger.Info("Listening", "address", opts.metricsAddr)
 	if err := http.ListenAndServe(opts.metricsAddr, nil); err != nil {
-		log.Fatal(err)
+		fatal(err)
 	}
 }
