@@ -1,6 +1,6 @@
 module github.com/galexrt/srcds_exporter
 
-go 1.27.0
+go 1.27.3
 
 require (
 	github.com/galexrt/go-rcon v0.0.6

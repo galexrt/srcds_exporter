@@ -7,6 +7,9 @@ on:
 
 jobs:
   build_release:
+    permissions:
+      contents: write
+      packages: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -20,6 +23,11 @@ jobs:
       - name: Run tests
         run: |
           make test
+
+      - name: Generate source SBOM
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: make sbom
 
       - name: Build and release
         env:
@@ -39,6 +47,27 @@ jobs:
           username: galexrt
           password: ${{ secrets.GITHUB_TOKEN }}
           tag_names: true
+
+      - name: Login to GHCR.io for image SBOM generation
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate and upload SBOMs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          GITHUB_RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          docker pull "$IMAGE"
+          make sbom-image IMAGE="$IMAGE"
+          gh release upload "$GITHUB_RELEASE_TAG" \
+            srcds_exporter.sbom.spdx.json \
+            srcds_exporter.image.sbom.spdx.json \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
 
       - name: Build and push to Quay.io
         uses: elgohr/Publish-Docker-Github-Action@v5

@@ -1,3 +1,8 @@
+## 1.8.0 / 2026-10-27
+
+* [ENHANCEMENT] add support for `stats` command
+* [CHORE] update dependencies and golang (1.27.3)
+
 ## 1.7.0 / 2026-07-31
 
 * [ENHANCEMENT] [add a2s support by @Dobytchick](https://github.com/galexrt/srcds_exporter/pull/77)
