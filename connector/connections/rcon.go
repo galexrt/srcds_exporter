@@ -118,3 +118,12 @@ func (c *RCON) GetPlayers() (map[string]*models.Player, error) {
 
 	return players, nil
 }
+
+// GetStats returns the performance values from the stats command.
+func (c *RCON) GetStats() (*models.Stats, error) {
+	resp, err := c.runRCONCommand("stats")
+	if err != nil {
+		return nil, err
+	}
+	return parser.ParseStats(resp)
+}

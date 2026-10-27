@@ -253,3 +253,35 @@ func TestParsePlayers(t *testing.T) {
 		assert.Equal(t, tt.expected, actual)
 	}
 }
+
+func TestParseStats(t *testing.T) {
+	tests := []struct {
+		name     string
+		request  string
+		expected *models.Stats
+	}{
+		{
+			name: "gmod",
+			request: `CPU    In_(KB/s)  Out_(KB/s)  Uptime  Map_changes  FPS      Players  Connects
+0.00   22.35      37.78       550     1            33.00    7        43`,
+			expected: &models.Stats{FPS: 33, NetInKilobytesPerSecond: 22.35, NetOutKilobytesPerSecond: 37.78, Connects: 43, HasConnects: true},
+		},
+		{
+			name: "source",
+			request: `CPU   NetIn   NetOut    Uptime  Maps   FPS   Players  Svms    +-ms   ~tick
+0.0      0.0      0.0      24     0  125.31       0    0.26    0.38    0.21`,
+			expected: &models.Stats{FPS: 125.31},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual, err := ParseStats(tt.request)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, actual)
+		})
+	}
+
+	_, err := ParseStats("stats unavailable")
+	assert.Error(t, err)
+}

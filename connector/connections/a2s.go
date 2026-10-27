@@ -17,6 +17,7 @@ limitations under the License.
 package connections
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -25,6 +26,11 @@ import (
 	a2s "github.com/rumblefrog/go-a2s"
 	"github.com/sirupsen/logrus"
 )
+
+// GetStats is unavailable through A2S.
+func (c *A2S) GetStats() (*models.Stats, error) {
+	return nil, errors.New("stats command is only available through RCON")
+}
 
 // A2S is a connection using the Valve A2S query protocol (via go-a2s)
 type A2S struct {

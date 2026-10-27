@@ -156,3 +156,72 @@ func ParsePlayers(input string) (map[string]*models.Player, error) {
 	}
 	return players, nil
 }
+
+var statsNumberRegex = regexp.MustCompile(`^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)$`)
+
+// ParseStats parses the tabular output of the SRCDS stats command.
+func ParseStats(input string) (*models.Stats, error) {
+	lines := strings.Split(strings.ReplaceAll(input, "\000", ""), "\n")
+	for i, line := range lines {
+		header := strings.Fields(line)
+		indices := map[string]int{}
+		for j, field := range header {
+			switch strings.ToLower(strings.TrimSpace(field)) {
+			case "fps":
+				indices["fps"] = j
+			case "netin", "in_(kb/s)":
+				indices["netin"] = j
+			case "netout", "out_(kb/s)":
+				indices["netout"] = j
+			case "connects":
+				indices["connects"] = j
+			}
+		}
+		if len(indices) < 3 || i+1 >= len(lines) {
+			continue
+		}
+
+		valueLine := ""
+		for _, candidate := range lines[i+1:] {
+			if strings.TrimSpace(candidate) != "" {
+				valueLine = candidate
+				break
+			}
+		}
+		if valueLine == "" {
+			continue
+		}
+		values := strings.Fields(valueLine)
+		parsed := make([]float64, 4)
+		valid := true
+		for j, name := range []string{"fps", "netin", "netout"} {
+			index := indices[name]
+			if index >= len(values) || !statsNumberRegex.MatchString(values[index]) {
+				valid = false
+				break
+			}
+			var err error
+			parsed[j], err = strconv.ParseFloat(values[index], 64)
+			if err != nil {
+				valid = false
+				break
+			}
+		}
+		if valid {
+			hasConnects := false
+			if index, ok := indices["connects"]; ok && index < len(values) && statsNumberRegex.MatchString(values[index]) {
+				var err error
+				parsed[3], err = strconv.ParseFloat(values[index], 64)
+				hasConnects = err == nil
+			}
+			return &models.Stats{
+				FPS:                      parsed[0],
+				NetInKilobytesPerSecond:  parsed[1],
+				NetOutKilobytesPerSecond: parsed[2],
+				Connects:                 parsed[3],
+				HasConnects:              hasConnects,
+			}, nil
+		}
+	}
+	return nil, errors.New("no stats found in input")
+}

@@ -17,6 +17,7 @@ limitations under the License.
 package connections
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -25,6 +26,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/xv-chang/rconGo/core"
 )
+
+// GetStats is unavailable through ServerQuery.
+func (c *ServerQuery) GetStats() (*models.Stats, error) {
+	return nil, errors.New("stats command is only available through RCON")
+}
 
 type ServerQuery struct {
 	log     *logrus.Entry

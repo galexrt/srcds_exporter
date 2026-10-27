@@ -39,4 +39,5 @@ type IConnection interface {
 	GetMap() (string, error)
 	GetPlayerCount() (*models.PlayerCount, error)
 	GetPlayers() (map[string]*models.Player, error)
+	GetStats() (*models.Stats, error)
 }
