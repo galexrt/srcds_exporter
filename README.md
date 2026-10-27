@@ -50,6 +50,14 @@ A collector is collecting certain metrics. Which collectors are enabled is contr
 | Name      | Description                                                  |
 | --------- | ------------------------------------------------------------ |
 | `players` | Report all players by with their Steam ID label as a metric. |
+| `stats`   | Report FPS, network traffic, and available connection totals from the RCON `stats` command. |
+
+The `stats` collector exposes `srcds_stats_fps`,
+`srcds_stats_netin_kilobytes_per_second`,
+`srcds_stats_netout_kilobytes_per_second`, and, when the server reports it,
+`srcds_stats_connects_total`. `srcds_stats_available` is `1` when the required
+stats values were parsed successfully and `0` otherwise. The collector is
+compatible with RCON connections only.
 
 ## Usage
 
